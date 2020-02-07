@@ -26,7 +26,7 @@ Let me start with a list of the classes you have to know and explore in the engi
 3. AAIController (optional)
 4. UPathFollowingComponent (optional)
 
-#### ANavigationData
+- #### ANavigationData
 Represents abstract Navigation Data (sub-classed as NavMesh, NavGraph, etc).
 Used as a common interface for all navigation types handled by NavigationSystem.
 
@@ -54,7 +54,7 @@ FORCEINLINE FPathFindingResult FindPath(const FNavAgentProperties& AgentProperti
 ```
 Take a look at the note "don't make this function virtual!", we will come back on it in a while.
 
-#### ARecastNavMesh
+- #### ARecastNavMesh
 This class inherit from ANavigationData and extend his functionality, everytime you place a NavMeshBoundsVolume in the map an object of this class is created in the map, yes, is the RecastNavMesh-Default object!
 
 This is the class we have to inherit from!
@@ -70,7 +70,7 @@ Which means you need to manually set the function pointer in your new navigation
 
 This is the function where we will implement (and pass to the FindPathImplementation pointer) in our inherited class!
 
-#### FGraphAStar
+- #### FGraphAStar
 Finally we are in the core class (ok ok, is a struct) of our example, the FGraphAstar is the Unreal Engine 4 generic implementation of the A* algorithm.
 
 If you open the GraphAStar.h file in UE4 you will find in the comments an explanation on how to use it, let's look:
@@ -129,14 +129,14 @@ In our example we will implement the code requested by FGraphAStar in our ARecas
 
 For now this is all for the foundamental class we need, at the end the only class we really will use is the ARecastNavMesh class.
 
-#### AAIController (optional)
+- #### AAIController (optional)
 In the project you will find two examples, A and B, example A use the default AIController (that come with the default PathFollowingComponent), the example B use a custom AIController (BP_AIController_Example_B) with a custom PathFollowingComponent (HGPathFollowingComponent).
 
 To make the custom PathFollowingComponent work we have to inherit the AAIController class and tell her which class of the PathFollowingComponent we want to use.
 
 We will talk about it later , in the AHGAIController section.
 
-#### UPathFollowingComponent (optional)
+- #### UPathFollowingComponent (optional)
 This component is in charge to let your AI follow the path, it's full of interesting functions and members, we will override only two of these functions just to show you they are here and what you can do with a custom PathFollowingComponent.
 
 We will talk about it later , in the UHGPathFollowingComponent section.
@@ -148,13 +148,48 @@ We will talk about it later , in the UHGPathFollowingComponent section.
 4. AHGAIController (inherited from AAIController)
 4. UHGPathFollowingComponent (inherited from UPathFollowingComponent)
 
-#### AGraphAStarNavMesh
+- #### AGraphAStarNavMesh
 Our most important class, where the magic happen!
 
 Here is where we "integrate" the FGraphAStar implementation and it will be very easy!
+Before do that we need a pointer to our AHexGrid class, this will be the hexagonal grid on which we will perform the pathfinding
 
-##### FGridPathFilter
-First thing first, let's start define the FGridPathFilter struct in the header
+```
+/* Just a pointer to an hexagonal grid actor */
+UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
+class AHexGrid *HexGrid;
+```
+
+also i want a function to set this pointer, this function is one of the key point of our example, it will switch from our FindPath implementation to the ARecastNavMesh::FindPath implementation.
+This can be done at realtime!
+Ok ok, if we do it while the AI is following a path it will finish it with the current FindPath and the switch will happen in the next MoveTo call (or you stop the move), but later you will see a little example of what you can do with a custom PathFollowingComponent so yes, is possible to do the switch on the fly but we will not do it in this project.
+
+```
+/* Set a pointer to an hexagonal grid, it can be nullptr */
+UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|NavMesh")
+void SetHexGrid(class AHexGrid *HGrid);
+
+void AGraphAStarNavMesh::SetHexGrid(AHexGrid *HGrid)
+{
+	if (HGrid)
+	{
+		// If the pointer is valid we will use our implementation of the FindPath function
+		HexGrid = HGrid;
+		FindPathImplementation = FindPath;
+	}
+	else
+	{
+		// If the pointer is not valid we will fallback to the default RecastNavMesh implementation
+		// of the FindPath function (the standard navigation behavior)
+		// You can also use FindPathImplementation = ARecastNavMesh::FindPath;
+		// but i start from the assumption that we are inheriting from ARecastNavMesh
+		HexGrid = nullptr;
+		FindPathImplementation = Super::FindPath;
+		
+	}
+}
+```
+Ok, move on and let me define the FGridPathFilter struct in the header
 ```
 /**
  * TQueryFilter (FindPath's parameter) filter class is what decides which graph edges can be used and at what cost.
@@ -240,7 +275,6 @@ bool FGridPathFilter::IsTraversalAllowed(const int32 NodeA, const int32 NodeB) c
 	{
 		return true;
 	}
-	
 }
 
 bool FGridPathFilter::WantsPartialSolution() const
@@ -250,14 +284,59 @@ bool FGridPathFilter::WantsPartialSolution() const
 }
 ```
 
-##### FGraphAStar functions and typedef
-# ARRIVATO QUI
+now what we have to do is declare the FNodeRef typedef and functions requested by FGraphAStar
 
-#### AHexGrid
+```
+/* Type used as identification of nodes in the graph */
+typedef int32 FNodeRef;
 
-#### HGTypes
+/* Returns number of neighbors that the graph node identified with NodeRef has */
+int32 GetNeighbourCount(FNodeRef NodeRef) const;
 
-#### AHGAIController (optional)
+/* Returns whether given node identification is correct */
+bool IsValidRef(FNodeRef NodeRef) const;
+
+/* Returns neighbor ref */
+FNodeRef GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) const;
+```
+
+```
+int32 AGraphAStarNavMesh::GetNeighbourCount(FNodeRef NodeRef) const
+{
+	return 6;
+}
+
+bool AGraphAStarNavMesh::IsValidRef(FNodeRef NodeRef) const
+{
+	return HexGrid->CubeCoordinates.IsValidIndex(NodeRef);
+}
+
+AGraphAStarNavMesh::FNodeRef
+AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) const
+{
+	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->CubeCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
+	return HexGrid->CubeCoordinates.IndexOfByKey(Neigh);
+}
+```
+
+you will notice i don't do any check on the validity of the HexGrid pointer because (in my opinion) there is no reason to do it, if the HexGrid pointer is null we don't run this code, we run the default implementation of FindPath decalred in the parent class!
+
+and finally the real Queen of the entire project, the FindPath function
+
+```
+static FPathFindingResult FindPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query);
+```
+
+we already discussed why this function is static so let's go with the code
+
+# ARRIVATO QUI (commentare codice e copypastare)
+
+
+- #### AHexGrid
+
+- #### HGTypes
+
+- #### AHGAIController (optional)
 We continue discuss about why we have to inherit this class if we want to use a custom PathFollowingComponent.
 
 We need to tell to the inherited AAIController class which class of the PathFollowingComponent we want to use, to do it we need the ObjectInitializer base class member and the SetDefaultSubobjectClass function and call it when we initialize the base class in the derived class constructor... very easy right? 
@@ -280,7 +359,7 @@ In your Blueprint you will still see the component named PathFollowingComponent 
 
 **NOTE:** There is a SetPathFollowingComponet function in the AAIController (also is BlueprintCallable) but i still have to figure out how it work, that's why i preferred the ObjectInitializer method.
 
-#### UHGPathFollowingComponent (optional)
+- #### UHGPathFollowingComponent (optional)
 With this class i want to show you how powerfull this component can be, in our example we override two function, we will do something very simple.
 
 The first function we are overriding is OnActorBump:
@@ -361,6 +440,8 @@ void UHGPathFollowingComponent::FollowPathSegment(float DeltaTime)
 		DrawDebugSphere(GetWorld(), NextPathPoint.Location + FVector(0.f, 0.f, 200.f), 25.f, 16, FColor::Green);
 	}
 }
-
 ```
+
+The PathFollowingComponent also has a member variable called MyNavData (really Epic?), this variable is a pointer to the ANavigationData but wait a moment, the ANavigationData is the parent class of ARecastNavMesh class the also is the parent of our GraphAStarNavMesh!
+We can cast this pointer to our navmesh/navdata (oh yeah, it's gonna confusing here :D)!
 # immagine qui
