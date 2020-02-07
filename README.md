@@ -341,7 +341,7 @@ We continue discuss about why we have to inherit this class if we want to use a 
 
 We need to tell to the inherited AAIController class which class of the PathFollowingComponent we want to use, to do it we need the ObjectInitializer base class member and the SetDefaultSubobjectClass function and call it when we initialize the base class in the derived class constructor... very easy right? 
 
-Ok ok, here i'm failing hard with my english (i'm very sorry) but don't worry, it is easier said than done:
+Ok ok, here i'm failing hard with my english (i'm very sorry) but don't worry, it's easier to do it than to say it:
 
 ```
 AHGAIController::AHGAIController(const FObjectInitializer &ObjectInitializer /*= FObjectInitializer::Get()*/)
