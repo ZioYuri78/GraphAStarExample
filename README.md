@@ -327,14 +327,156 @@ and finally the real Queen of the entire project, the FindPath function
 static FPathFindingResult FindPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query);
 ```
 
-we already discussed why this function is static so let's go with the code
+I will skip the first block here because is the same code you can find in the ARecastNavMesh::FindPath function but don't worry, it will be easy to understand, just read it.
 
-# ARRIVATO QUI (commentare codice e copypastare)
+Only one thing, because we are in a static function we don't have a "this" pointer and we can't access to non-static member variables like HexGrid but luckily the FPathFindingQuery contain a pointer to the ANavigationData object.
+
+`const ANavigationData *Self = Query.NavData.Get();`
+
+Now we can cast to our class, this will allow us to access the member variables (and functions), remember, our AGraphAStarNavMesh inherit from ARecastNavMesh that inherit from ANavigationData so we can do the cast.
+
+`const AGraphAStarNavMesh *GraphAStarNavMesh{ Cast<const AGraphAStarNavMesh>(Self) };`
+
+Here i'll show you only the core, where we finally use the FGraphAStar to compute our path (btw the project code is commented).
+
+```
+// The pathfinder need a starting and ending point, so we create two temporary
+// cube coordinates from the Query start and ending location
+FHCubeCoord StartCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.StartLocation) };
+FHCubeCoord EndCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.EndLocation) };
+			
+// and than we search in the HexGrid CubeCoordinates array for the index of items 
+// equals to our temp coordinates.
+const int32 StartIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(StartCCoord) };
+const int32 EndIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(EndCCoord)};
+
+// We need the index because the FGraphAStar work with indexes!
+
+// Here we will store the path generated from the pathfinder
+TArray<int32> PathIndices;
+
+// Initialization of the pathfinder, as you can see we pass our GraphAStarNavMesh as parameter,
+// so internally it can use the functions we implemented.
+FGraphAStar<AGraphAStarNavMesh> Pathfinder(*GraphAStarNavMesh);
+
+// and run the A* algorithm, the FGraphAStar::FindPath function want a starting index, an ending index,
+// the FGridPathFilter which want our GraphAStarNavMesh as parameter and a reference to the array where
+// all the indices of our path will be stored
+EGraphAStarResult AStarResult{ Pathfinder.FindPath(StartIdx, EndIdx, FGridPathFilter(*GraphAStarNavMesh), PathIndices) };
+```
+
+as you can see is super easy to use, after we created an array where store the indexes of the path and the starting/ending points we create an instance of FGraphAstar with our AGraphAStarNavMesh as a template, we dereference the GraphAStarNavMesh pointer and we pass it as argument.
+
+`FGraphAStar<AGraphAStarNavMesh> Pathfinder(*GraphAStarNavMesh);`
+
+The FGraphAStar::FindPath function want a starting point, an ending point (in form of indexes, so not the real coordinates but the indexes of the array where they are stored), an instance of FGridPathFilter in which we pass a dereference to GraphAStarNavMesh pointer and a reference to an array where store the computed path points (again in indexes form).
+It also return a EGraphAStarResult enum that will tell us if the search failed (and why) or succeeded.
+
+`EGraphAStarResult AStarResult{ Pathfinder.FindPath(StartIdx, EndIdx, FGridPathFilter(*GraphAStarNavMesh), PathIndices) };`
+
+If the search succeeded we use all the indexes in the PathIndices array to build up the real Path, but where is the real path?
+The FPathFindingResult struct (returned by AGraphAStarNavMesh::FindPath) contain an enum (to say if the search failed or not) and a pointer to the Path (FNavPathSharedPtr).
+
+```
+case SearchSuccess:
+
+	// Search succeeded
+	Result.Result = ENavigationQueryResult::Success;
+
+	// PathIndices array computed by FGraphAStar will not contain the starting point, so
+	// we need to add it manually the the Path::PathPoints array
+	Result.Path->GetPathPoints().Add(FNavPathPoint(Query.StartLocation));
+
+	// Let's traverse the PathIndices array and build the FNavPathPoints we 
+	// need to add to the Path.
+	for (const int32 &PathIndex : PathIndices)
+	{
+		// Get a temporary Cube Coordinate from our HexGrid
+		FHCubeCoord CubeCoord{ GraphAStarNavMesh->HexGrid->CubeCoordinates[PathIndex] };
+
+		// Create a temporary FNavPathPoint
+		FNavPathPoint PathPoint{};
+
+		// Because we can create HexGrid with only Cube Coordinates and no tiles
+		// we look if the current index we are using is a valid index for the GridTiles array
+		if (GraphAStarNavMesh->HexGrid->GridTiles.IsValidIndex(PathIndex))
+		{
+			// If the index is valid (so we have a HexGrid with tiles) we compute the Location
+			// of the PathPoint, we use the World Space coordinates of the current Cube Coordinate
+			// as a base location and we add an offset to the Z axis based on the corresponding
+			// Tile cost multiplied by a factor of 10.
+			// How to compute the Z axis of the path is up to you, this is only an example!
+			PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord) +
+				FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost * 10.f);
+		}
+		else
+		{
+			// If the current PathIndex isn't a valid index for the GridTiles array
+			// (so we assume our HexGrid is only a "logical" grid with only cube coordinates and no tiles)
+			// we simply transform the coordinates from cube space to world space and pass it to the PathPoint
+			PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord);
+		}
+
+		// We finally add the computed PathPoint to the Path::PathPoints array
+		Result.Path->GetPathPoints().Add(FNavPathPoint(PathPoint));
+	}
+
+	// We finished to create the Path so mark it as Ready.
+	Result.Path->MarkReady();
+	break;
+```
+
+That's all, the key concept is the FGraphAStar::FindPath algorithm work with indexes, you don't need to pass the cube coordinates but the indexes of them, all the "service" functions we implemented before and the FGridPathFilter struct we already implemented will take care to use those indexes with the cube coordinates array.
+
+It's more easy to follow the flow of the code than explain it.
+
+Now we only need to add our AGraphAStarNavMesh to the Navigation System list of supported agents, to do it you simply have to open your Project Settings, search Navigation System under the Engine category, under Agents you will find an empty array called Supported Agents, just click the small + symbol and select GraphAStarNavMesh in Nav Data Class and Preferred Nav Data, rebuild your paths with the Build button in the main toolbar and you are ready to go.
+
+# IMMAGINE project settings
+
+Now you only have to use a MoveTo call (or any MoveTo version) and the AI will follow the A* path computed on the hexagonal grid you placed in the level and passed via SetHexGrid, if you pass a null actor with SetHexGrid the system will fallback to the default pathfindind.
+
+Look at the BP_PlayerController to see how i pass an existing HexGrid to the NavMesh and how i set the destination to the AI Blackboard, if you open the example Behavior Trees (BT_Example_A/B) you will  notice they contains only a MoveTo task to a target location for AI movement!
 
 
 - #### AHexGrid
+The HexGrid class is rough implementation of an hexagonal grid actor, the most important function is AHexGrid::CreateGrid, is based on the [Red Blob Games implementation](https://www.redblobgames.com/grids/hexagons/implementation.html#map-shapes) so i strongly suggest to read the linked article, i just want to oint out two things.
+
+1. I'm using a delegate at each step of the "creation" so we can delegate the creation of the tiles to another function or Blueprint Event, this delegate is optional so you are not obliged to use it, to do it you need to mark the function parameter with the AutoCreateRefTerm UFUNCTION metadata
+
+```
+UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid", meta = (AutoCreateRefTerm = "CreationStepDelegate"))
+void CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, const FCreationStepDelegate &CreationStepDelegate);
+```
+
+if this delegate is bounded will be executed, if not...just not.
+
+`CreationStepDelegate.ExecuteIfBound(TileLayout, CCoord);`
+
+2. I'm using a simple formula to compute how much space i want to reserve in my arrays, i do this because the "Add" call can be expensive when used a lot of time and if we create a grid with radius > 10 tiles it will be called hundreds of times in the for loop.
+
+```
+int32 Size{ 1 };
+for (int32 i{ 1 }; i <= Radius; ++i)
+{
+	Size += 6 * i;
+}
+CubeCoordinates.Reserve(Size);
+
+// Check if we provided a delegate, if yes we also reserve space in the GridTiles array.
+if (CreationStepDelegate.IsBound())
+{
+	GridTiles.Reserve(Size);		
+}
+```
+
+all the other functions of this class are pretty simple and each of them as a link to the relative Red Blob Game article section
+s.
 
 - #### HGTypes
+This header just contain data structures and enums used to create the hexagonal grid, the Red Blob Games articles explain better than me how they work and why.
+
+Heach structs and enums in the code has a link to the relative Red Blob Games article.
 
 - #### AHGAIController (optional)
 We continue discuss about why we have to inherit this class if we want to use a custom PathFollowingComponent.
@@ -445,3 +587,36 @@ void UHGPathFollowingComponent::FollowPathSegment(float DeltaTime)
 The PathFollowingComponent also has a member variable called MyNavData (really Epic?), this variable is a pointer to the ANavigationData but wait a moment, the ANavigationData is the parent class of ARecastNavMesh class the also is the parent of our GraphAStarNavMesh!
 We can cast this pointer to our navmesh/navdata (oh yeah, it's gonna confusing here :D)!
 # immagine qui
+
+### Core Blueprints of the project
+
+All the Blueprints are well commented.
+
+1. AI
+   - BP_Player
+   - Example A
+	 - BB_Example_A
+	 - BP_AIController_Example_A
+	 - BT_Example_A
+   - Example B
+	 - BB_Example_B
+	 - BP_AIController_Example_B
+	 - BTS_BindBump
+	 - BTT_Explode
+	 - BTT_Respawn
+	 - BT_Example_B
+
+2. Extras
+   - BP_Portal
+	
+3. Framework
+   - BP_GameMode
+   - BP_PlayerController
+   - BP_SpectatorPawn
+	
+4. HexagonalGrid
+   - BP_HexGrid
+	
+5. Interfaces
+	- BPI_GraphAStarExample
+	
