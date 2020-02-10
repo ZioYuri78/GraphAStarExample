@@ -592,7 +592,7 @@ void UHGPathFollowingComponent::FollowPathSegment(float DeltaTime)
 }
 ```
 
-![alt Path Segment](GHImages/pathsegment.PNG]
+![alt pathsegment](GHImages/pathsegment.PNG)
 
 The PathFollowingComponent also has a member variable called MyNavData (really Epic?), this variable is a pointer to the ANavigationData but wait a moment, the ANavigationData is the parent class of ARecastNavMesh class the also is the parent of our GraphAStarNavMesh!
 We can cast this pointer to our navmesh/navdata (oh yeah, it's gonna confusing here :D)!
