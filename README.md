@@ -6,7 +6,7 @@
   * [Hexagonal grid reference.](https://www.redblobgames.com/grids/hexagons/)
   * [Hexagonal grid implementation guide.](https://www.redblobgames.com/grids/hexagons/implementation.html)
   
-## These readings will let you better understand my example project
+## Readings will let you better understand my example project
 * [Epic wiki article about replacing the pathfinder.](https://wiki.unrealengine.com/Replacing_The_Pathfinder)
 * [Neatly replacing NavMesh with A* in UE4 by Chris Russel.](https://crussel.net/2016/06/05/neatly-replacing-navmesh-with-a-in-ue4/)
 * [Epic wiki article about custom Path Following Component.](https://wiki.unrealengine.com/AI_Navigation_in_C%2B%2B,_Customize_Path_Following_Every_Tick)
@@ -18,14 +18,18 @@ In the project you will find two examples, A and B, example A use the default AI
 
 Both examples work with the same Pathfinder, Example B is just a bonus that will show you what a custom PathFollowingComponent can do.
 
-### Classes and Structs you need to know
-Let me start with a list of the classes you have to know and explore in the engine
-1. ANavigationData
-2. ARecastNavMesh
-3. FGraphAStar
-3. AAIController (optional)
-4. UPathFollowingComponent (optional)
+### Table of contents
+- [Classes and structs you need to know](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-you-need-to-know)
+- [Classes and structs we used in the project](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-we-used-in-the-project)
+- [Core Blueprints of the project](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#core-blueprints-of-the-project)
 
+### Classes and Structs you need to know
+- [ANavigationData](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#anavigationdata)
+- [ARecastNavMesh](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#arecastnavmesh)
+- [FGraphAStar](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#fgraphastar)
+- [AAIController (optional)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#aaicontroller-optional)
+- [UPathFollowingComponent (optional)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#upathfollowingcomponent-optional)
+  
 - #### ANavigationData
 Represents abstract Navigation Data (sub-classed as NavMesh, NavGraph, etc).
 Used as a common interface for all navigation types handled by NavigationSystem.
@@ -142,11 +146,11 @@ This component is in charge to let your AI follow the path, it's full of interes
 We will talk about it later , in the UHGPathFollowingComponent section.
 
 ### Classes and structs we used in the project
-1. AGraphAStarNavMesh (inherited from ARecastNavMesh)
-2. AHexGrid (inherited from AActor)
-3. HGTypes (a collection of structs used by AHexGrid)
-4. AHGAIController (inherited from AAIController)
-4. UHGPathFollowingComponent (inherited from UPathFollowingComponent)
+- [AGraphAStarNavMesh (inherited from ARecastNavMesh)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#agraphastarnavmesh)
+- [AHexGrid (inherited from AActor)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#ahexgrid)
+- [HGTypes (a collection of structs used by AHexGrid)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#hgtypes)
+- [AHGAIController (inherited from AAIController)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#ahgaicontroller-optional)
+- [UHGPathFollowingComponent (inherited from UPathFollowingComponent)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#uhgpathfollowingcomponent-optional)
 
 - #### AGraphAStarNavMesh
 Our most important class, where the magic happen!
@@ -432,7 +436,7 @@ It's more easy to follow the flow of the code than explain it.
 
 Now we only need to add our AGraphAStarNavMesh to the Navigation System list of supported agents, to do it you simply have to open your Project Settings, search Navigation System under the Engine category, under Agents you will find an empty array called Supported Agents, just click the small + symbol and select GraphAStarNavMesh in Nav Data Class and Preferred Nav Data, rebuild your paths with the Build button in the main toolbar and you are ready to go.
 
-# IMMAGINE project settings
+![alt supported agents](GHImages/supportedagents.PNG)
 
 Now you only have to use a MoveTo call (or any MoveTo version) and the AI will follow the A* path computed on the hexagonal grid you placed in the level and passed via SetHexGrid, if you pass a null actor with SetHexGrid the system will fallback to the default pathfindind.
 
@@ -497,7 +501,8 @@ that's all, in the contructor we use `: Super()` and we pass the ObjectInitializ
 So now when we create an AIController Blueprint based to our class instead of have the default PathFollowingComponent it will have our version but keep attention to the TEXT() parameter, to work well it must be the same as the default component of the parent AIController class! ("PathFollowingComponent")
 
 In your Blueprint you will still see the component named PathFollowingComponent but if you go over it with the mouse you will see it is our derived PathFollowingComponent. (so magic)
-# immagine qui
+
+![alt PathFollowing Component](GHImages/AIControllerB.PNG)
 
 **NOTE:** There is a SetPathFollowingComponet function in the AAIController (also is BlueprintCallable) but i still have to figure out how it work, that's why i preferred the ObjectInitializer method.
 
@@ -584,12 +589,14 @@ void UHGPathFollowingComponent::FollowPathSegment(float DeltaTime)
 }
 ```
 
+![alt Path Segment](GHImages/pathsegment.PNG]
+
 The PathFollowingComponent also has a member variable called MyNavData (really Epic?), this variable is a pointer to the ANavigationData but wait a moment, the ANavigationData is the parent class of ARecastNavMesh class the also is the parent of our GraphAStarNavMesh!
 We can cast this pointer to our navmesh/navdata (oh yeah, it's gonna confusing here :D)!
-# immagine qui
+
+
 
 ### Core Blueprints of the project
-
 All the Blueprints are well commented.
 
 1. AI
@@ -620,3 +627,6 @@ All the Blueprints are well commented.
 5. Interfaces
 	- BPI_GraphAStarExample
 	
+## Conclusions
+There is a lot of topic i didn't cover here, i can only suggest you to explore the code of the key parent classes and experiment, have fun!
+
