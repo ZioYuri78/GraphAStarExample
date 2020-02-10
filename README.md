@@ -12,6 +12,9 @@
 * [Epic wiki article about custom Path Following Component.](https://wiki.unrealengine.com/AI_Navigation_in_C%2B%2B,_Customize_Path_Following_Every_Tick)
 
 ## The GraphAStarExample project
+
+![](https://media.giphy.com/media/RJ1aMT0TB7OQXcbVIY/giphy.gif)
+
 Welcome all to my example project about how to use the Unreal Engine 4 generic graph A* implementation with hexagonal grids, the intent of this project is to guide you on what you need to setup the basics for navigation on hexagonal grids, this is not a complete tutorial but more like a guideline and doesn't cover topics like avoidance, grid transfer etc.
 
 In the project you will find two examples, A and B, example A use the default AIController (that come with the default PathFollowingComponent), the example B use a custom AIController (BP_AIController_Example_B) with a custom PathFollowingComponent (HGPathFollowingComponent).
@@ -19,9 +22,9 @@ In the project you will find two examples, A and B, example A use the default AI
 Both examples work with the same Pathfinder, Example B is just a bonus that will show you what a custom PathFollowingComponent can do.
 
 ### Table of contents
-- [Classes and structs you need to know](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-you-need-to-know)
-- [Classes and structs we used in the project](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-we-used-in-the-project)
-- [Core Blueprints of the project](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#core-blueprints-of-the-project)
+- [Classes and structs you need to know.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-you-need-to-know)
+- [Classes and structs we used in the project.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-we-used-in-the-project)
+- [Core Blueprints of the project.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#core-blueprints-of-the-project)
 
 ### Classes and Structs you need to know
 - [ANavigationData](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#anavigationdata)
@@ -29,8 +32,8 @@ Both examples work with the same Pathfinder, Example B is just a bonus that will
 - [FGraphAStar](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#fgraphastar)
 - [AAIController (optional)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#aaicontroller-optional)
 - [UPathFollowingComponent (optional)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#upathfollowingcomponent-optional)
-  
-- #### ANavigationData
+
+#### ANavigationData
 Represents abstract Navigation Data (sub-classed as NavMesh, NavGraph, etc).
 Used as a common interface for all navigation types handled by NavigationSystem.
 
@@ -58,7 +61,7 @@ FORCEINLINE FPathFindingResult FindPath(const FNavAgentProperties& AgentProperti
 ```
 Take a look at the note "don't make this function virtual!", we will come back on it in a while.
 
-- #### ARecastNavMesh
+#### ARecastNavMesh
 This class inherit from ANavigationData and extend his functionality, everytime you place a NavMeshBoundsVolume in the map an object of this class is created in the map, yes, is the RecastNavMesh-Default object!
 
 This is the class we have to inherit from!
@@ -74,7 +77,7 @@ Which means you need to manually set the function pointer in your new navigation
 
 This is the function where we will implement (and pass to the FindPathImplementation pointer) in our inherited class!
 
-- #### FGraphAStar
+#### FGraphAStar
 Finally we are in the core class (ok ok, is a struct) of our example, the FGraphAstar is the Unreal Engine 4 generic implementation of the A* algorithm.
 
 If you open the GraphAStar.h file in UE4 you will find in the comments an explanation on how to use it, let's look:
@@ -133,14 +136,14 @@ In our example we will implement the code requested by FGraphAStar in our ARecas
 
 For now this is all for the foundamental class we need, at the end the only class we really will use is the ARecastNavMesh class.
 
-- #### AAIController (optional)
+#### AAIController (optional)
 In the project you will find two examples, A and B, example A use the default AIController (that come with the default PathFollowingComponent), the example B use a custom AIController (BP_AIController_Example_B) with a custom PathFollowingComponent (HGPathFollowingComponent).
 
 To make the custom PathFollowingComponent work we have to inherit the AAIController class and tell her which class of the PathFollowingComponent we want to use.
 
 We will talk about it later , in the AHGAIController section.
 
-- #### UPathFollowingComponent (optional)
+#### UPathFollowingComponent (optional)
 This component is in charge to let your AI follow the path, it's full of interesting functions and members, we will override only two of these functions just to show you they are here and what you can do with a custom PathFollowingComponent.
 
 We will talk about it later , in the UHGPathFollowingComponent section.
@@ -152,7 +155,7 @@ We will talk about it later , in the UHGPathFollowingComponent section.
 - [AHGAIController (inherited from AAIController)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#ahgaicontroller-optional)
 - [UHGPathFollowingComponent (inherited from UPathFollowingComponent)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#uhgpathfollowingcomponent-optional)
 
-- #### AGraphAStarNavMesh
+#### AGraphAStarNavMesh
 Our most important class, where the magic happen!
 
 Here is where we "integrate" the FGraphAStar implementation and it will be very easy!
@@ -443,7 +446,7 @@ Now you only have to use a MoveTo call (or any MoveTo version) and the AI will f
 Look at the BP_PlayerController to see how i pass an existing HexGrid to the NavMesh and how i set the destination to the AI Blackboard, if you open the example Behavior Trees (BT_Example_A/B) you will  notice they contains only a MoveTo task to a target location for AI movement!
 
 
-- #### AHexGrid
+#### AHexGrid
 The HexGrid class is rough implementation of an hexagonal grid actor, the most important function is AHexGrid::CreateGrid, is based on the [Red Blob Games implementation](https://www.redblobgames.com/grids/hexagons/implementation.html#map-shapes) so i strongly suggest to read the linked article, i just want to oint out two things.
 
 1. I'm using a delegate at each step of the "creation" so we can delegate the creation of the tiles to another function or Blueprint Event, this delegate is optional so you are not obliged to use it, to do it you need to mark the function parameter with the AutoCreateRefTerm UFUNCTION metadata
@@ -477,12 +480,12 @@ if (CreationStepDelegate.IsBound())
 all the other functions of this class are pretty simple and each of them as a link to the relative Red Blob Game article section
 s.
 
-- #### HGTypes
+#### HGTypes
 This header just contain data structures and enums used to create the hexagonal grid, the Red Blob Games articles explain better than me how they work and why.
 
 Heach structs and enums in the code has a link to the relative Red Blob Games article.
 
-- #### AHGAIController (optional)
+#### AHGAIController (optional)
 We continue discuss about why we have to inherit this class if we want to use a custom PathFollowingComponent.
 
 We need to tell to the inherited AAIController class which class of the PathFollowingComponent we want to use, to do it we need the ObjectInitializer base class member and the SetDefaultSubobjectClass function and call it when we initialize the base class in the derived class constructor... very easy right? 
@@ -506,7 +509,7 @@ In your Blueprint you will still see the component named PathFollowingComponent 
 
 **NOTE:** There is a SetPathFollowingComponet function in the AAIController (also is BlueprintCallable) but i still have to figure out how it work, that's why i preferred the ObjectInitializer method.
 
-- #### UHGPathFollowingComponent (optional)
+#### UHGPathFollowingComponent (optional)
 With this class i want to show you how powerfull this component can be, in our example we override two function, we will do something very simple.
 
 The first function we are overriding is OnActorBump:
