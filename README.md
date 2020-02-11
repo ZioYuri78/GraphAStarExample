@@ -45,18 +45,18 @@ FFindPathPtr FindPathImplementation;
 So the ANavigationData::FindPath function call this function pointer that will be in charge of run the operations.
 ```
 /** 
- *	Synchronously looks for a path from @StartLocation to @EndLocation for agent with properties @AgentProperties. 
- *  NavMesh actor appropriate for specified FNavAgentProperties will be found automatically
- *	@param ResultPath results are put here
- *	@return true if path has been found, false otherwise
+ * Synchronously looks for a path from @StartLocation to @EndLocation for agent with properties @AgentProperties. 
+ * NavMesh actor appropriate for specified FNavAgentProperties will be found automatically
+ * @param ResultPath results are put here
+ * @return true if path has been found, false otherwise
  *
- *	@note don't make this function virtual! Look at implementation details and its comments for more info.
+ * @note don't make this function virtual! Look at implementation details and its comments for more info.
  */
 FORCEINLINE FPathFindingResult FindPath(const FNavAgentProperties& AgentProperties, const FPathFindingQuery& Query) const
 {
-	  check(FindPathImplementation);
-		// this awkward implementation avoids virtual call overhead - it's possible this function will be called a lot
-		return (*FindPathImplementation)(AgentProperties, Query);
+	check(FindPathImplementation);
+	// this awkward implementation avoids virtual call overhead - it's possible this function will be called a lot
+	return (*FindPathImplementation)(AgentProperties, Query);
 }
 ```
 Take a look at the note "don't make this function virtual!", we will come back on it in a while.
@@ -168,7 +168,9 @@ class AHexGrid *HexGrid;
 ```
 
 also i want a function to set this pointer, this function is one of the key point of our example, it will switch from our FindPath implementation to the ARecastNavMesh::FindPath implementation.
+
 This can be done at realtime!
+
 Ok ok, if we do it while the AI is following a path it will finish it with the current FindPath and the switch will happen in the next MoveTo call (or you stop the move), but later you will see a little example of what you can do with a custom PathFollowingComponent so yes, is possible to do the switch on the fly but we will not do it in this project.
 
 ```
@@ -271,7 +273,7 @@ float FGridPathFilter::GetTraversalCost(const int32 StartNodeRef, const int32 En
 bool FGridPathFilter::IsTraversalAllowed(const int32 NodeA, const int32 NodeB) const
 {
 	// If NodeB is a valid index of the GridTiles array we return bIsBlocking, 
-	// if not we assume we can traverse so we return false.
+	// if not we assume we can traverse so we return true.
 	// Here you can make a more complex operation like use a line trace to see
 	// there is some obstacles (like an enemy), in our example we just use a simple implementation
 	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeB))
@@ -447,7 +449,7 @@ Look at the BP_PlayerController to see how i pass an existing HexGrid to the Nav
 
 
 #### AHexGrid
-The HexGrid class is rough implementation of an hexagonal grid actor, the most important function is AHexGrid::CreateGrid, is based on the [Red Blob Games implementation](https://www.redblobgames.com/grids/hexagons/implementation.html#map-shapes) so i strongly suggest to read the linked article, i just want to oint out two things.
+The HexGrid class is a rough implementation of an hexagonal grid actor, the most important function is AHexGrid::CreateGrid, is based on the [Red Blob Games implementation](https://www.redblobgames.com/grids/hexagons/implementation.html#map-shapes) so i strongly suggest to read the linked article, i just want to oint out two things.
 
 1. I'm using a delegate at each step of the "creation" so we can delegate the creation of the tiles to another function or Blueprint Event, this delegate is optional so you are not obliged to use it, to do it you need to mark the function parameter with the AutoCreateRefTerm UFUNCTION metadata
 
@@ -595,6 +597,7 @@ void UHGPathFollowingComponent::FollowPathSegment(float DeltaTime)
 ![alt pathsegment](GHImages/pathsegment.PNG)
 
 The PathFollowingComponent also has a member variable called MyNavData (really Epic?), this variable is a pointer to the ANavigationData but wait a moment, the ANavigationData is the parent class of ARecastNavMesh class the also is the parent of our GraphAStarNavMesh!
+
 We can cast this pointer to our navmesh/navdata (oh yeah, it's gonna confusing here :D)!
 
 
@@ -602,33 +605,29 @@ We can cast this pointer to our navmesh/navdata (oh yeah, it's gonna confusing h
 ### Core Blueprints of the project
 All the Blueprints are well commented.
 
-1. AI
-   - BP_Player
-   - Example A
-	 - BB_Example_A
-	 - BP_AIController_Example_A
-	 - BT_Example_A
-   - Example B
-	 - BB_Example_B
-	 - BP_AIController_Example_B
-	 - BTS_BindBump
-	 - BTT_Explode
-	 - BTT_Respawn
-	 - BT_Example_B
-
-2. Extras
-   - BP_Portal
-	
-3. Framework
-   - BP_GameMode
-   - BP_PlayerController
-   - BP_SpectatorPawn
-	
-4. HexagonalGrid
-   - BP_HexGrid
-	
-5. Interfaces
-	- BPI_GraphAStarExample
+- AI
+  - BP_Player
+  - Example A
+    - BB_Example_A
+    - BP_AIController_Example_A
+    - BT_Example_A
+  - Example B
+    - BB_Example_B
+    - BP_AIController_Example_B
+    - BTS_BindBump
+    - BTT_Explode
+    - BTT_Respawn
+    - BT_Example_B
+- Extras
+  - BP_Portal
+- Framework
+  - BP_GameMode
+  - BP_PlayerController
+  - BP_SpectatorPawn
+- HexagonalGrid
+  - BP_HexGrid
+- Interfaces
+  - BPI_GraphAStarExample
 	
 ## Conclusions
 There is a lot of topic i didn't cover here, i can only suggest you to explore the code of the key parent classes and experiment, have fun!
