@@ -27,11 +27,11 @@ Both examples work with the same Pathfinder, Example B is just a bonus that will
 - [Core Blueprints of the project.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#core-blueprints-of-the-project)
 
 ### Classes and Structs you need to know
-- [ANavigationData](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#anavigationdata)
-- [ARecastNavMesh](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#arecastnavmesh)
-- [FGraphAStar](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#fgraphastar)
-- [AAIController (optional)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#aaicontroller-optional)
-- [UPathFollowingComponent (optional)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#upathfollowingcomponent-optional)
+- [ANavigationData](https://github.com/ZioYuri78/GraphAStarExample#anavigationdata)
+- [ARecastNavMesh](https://github.com/ZioYuri78/GraphAStarExample#arecastnavmesh)
+- [FGraphAStar](https://github.com/ZioYuri78/GraphAStarExample#fgraphastar)
+- [AAIController (optional)](https://github.com/ZioYuri78/GraphAStarExample#aaicontroller-optional)
+- [UPathFollowingComponent (optional)](https://github.com/ZioYuri78/GraphAStarExample#upathfollowingcomponent-optional)
 
 #### ANavigationData
 Represents abstract Navigation Data (sub-classed as NavMesh, NavGraph, etc).
@@ -149,11 +149,11 @@ This component is in charge to let your AI follow the path, it's full of interes
 We will talk about it later , in the UHGPathFollowingComponent section.
 
 ### Classes and structs we used in the project
-- [AGraphAStarNavMesh (inherited from ARecastNavMesh)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#agraphastarnavmesh)
-- [AHexGrid (inherited from AActor)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#ahexgrid)
-- [HGTypes (a collection of structs used by AHexGrid)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#hgtypes)
-- [AHGAIController (inherited from AAIController)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#ahgaicontroller-optional)
-- [UHGPathFollowingComponent (inherited from UPathFollowingComponent)](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#uhgpathfollowingcomponent-optional)
+- [AGraphAStarNavMesh (inherited from ARecastNavMesh)](https://github.com/ZioYuri78/GraphAStarExample#agraphastarnavmesh)
+- [AHexGrid (inherited from AActor)](https://github.com/ZioYuri78/GraphAStarExample#ahexgrid)
+- [HGTypes (a collection of structs used by AHexGrid)](https://github.com/ZioYuri78/GraphAStarExample#hgtypes)
+- [AHGAIController (inherited from AAIController)](https://github.com/ZioYuri78/GraphAStarExample#ahgaicontroller-optional)
+- [UHGPathFollowingComponent (inherited from UPathFollowingComponent)](https://github.com/ZioYuri78/GraphAStarExample#uhgpathfollowingcomponent-optional)
 
 #### AGraphAStarNavMesh
 Our most important class, where the magic happen!
