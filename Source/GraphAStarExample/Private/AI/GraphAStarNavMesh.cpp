@@ -42,7 +42,7 @@ float FGridPathFilter::GetTraversalCost(const int32 StartNodeRef, const int32 En
 bool FGridPathFilter::IsTraversalAllowed(const int32 NodeA, const int32 NodeB) const
 {
 	// If NodeB is a valid index of the GridTiles array we return bIsBlocking, 
-	// if not we assume we can traverse so we return false.
+	// if not we assume we can traverse so we return true.
 	// Here you can make a more complex operation like use a line trace to see
 	// there is some obstacles (like an enemy), in our example we just use a simple implementation
 	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeB))

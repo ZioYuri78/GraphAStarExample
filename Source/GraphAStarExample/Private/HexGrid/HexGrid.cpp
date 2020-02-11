@@ -31,6 +31,7 @@ void AHexGrid::CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, c
 {
 	SCOPE_CYCLE_COUNTER(STAT_CreateGrid);
 
+	// https://www.unrealengine.com/en-US/blog/optimizing-tarray-usage-for-performance
 	// preallocate array memory
 	// R1 = 1 + 6*1
 	// R2 = 1 + 6*1 + 6*2
