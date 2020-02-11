@@ -22,9 +22,9 @@ In the project you will find two examples, A and B, example A use the default AI
 Both examples work with the same Pathfinder, Example B is just a bonus that will show you what a custom PathFollowingComponent can do.
 
 ### Table of contents
-- [Classes and structs you need to know.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-you-need-to-know)
-- [Classes and structs we used in the project.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#classes-and-structs-we-used-in-the-project)
-- [Core Blueprints of the project.](https://github.com/ZioYuri78/GraphAStarExample/blob/Readme-WIP/README.md#core-blueprints-of-the-project)
+- [Classes and structs you need to know.](https://github.com/ZioYuri78/GraphAStarExample#classes-and-structs-you-need-to-know)
+- [Classes and structs we used in the project.](https://github.com/ZioYuri78/GraphAStarExample#classes-and-structs-we-used-in-the-project)
+- [Core Blueprints of the project.](https://github.com/ZioYuri78/GraphAStarExample#core-blueprints-of-the-project)
 
 ### Classes and Structs you need to know
 - [ANavigationData](https://github.com/ZioYuri78/GraphAStarExample#anavigationdata)
