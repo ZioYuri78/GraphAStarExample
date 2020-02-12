@@ -84,7 +84,7 @@ void AHexGrid::CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, c
 }
 
 
-FVector AHexGrid::HexToWorld(const FHCubeCoord &H)
+FVector AHexGrid::HexToWorld(const FHCubeCoord &H) const
 {
 	// Set the layout orientation
 	FHTileOrientation TileOrientation{};
@@ -104,7 +104,7 @@ FVector AHexGrid::HexToWorld(const FHCubeCoord &H)
 }
 
 
-FHCubeCoord AHexGrid::WorldToHex(const FVector &Location)
+FHCubeCoord AHexGrid::WorldToHex(const FVector &Location) const
 {
 	// Set the layout orientation
 	FHTileOrientation TileOrientation{};
@@ -140,7 +140,7 @@ FVector AHexGrid::SnapToGrid(const FVector &Location)
 }
 
 
-FHCubeCoord AHexGrid::HexRound(const FHFractional &F)
+FHCubeCoord AHexGrid::HexRound(const FHFractional &F) const
 {
 	int32 q{ int32(FMath::RoundToDouble(F.QRS.X)) };
 	int32 r{ int32(FMath::RoundToDouble(F.QRS.Y)) };
@@ -172,13 +172,13 @@ bool AHexGrid::HexEqual(const FHCubeCoord &A, const FHCubeCoord &B)
 	return A == B;
 }
 
-FHCubeCoord AHexGrid::GetDirection(int32 Dir)
+FHCubeCoord AHexGrid::GetDirection(int32 Dir) const
 {
 	check(Dir < HDirections.Directions.Num());
 	return HDirections.Directions[Dir];
 }
 
-FHCubeCoord AHexGrid::GetNeighbor(const FHCubeCoord &H, const FHCubeCoord &Dir)
+FHCubeCoord AHexGrid::GetNeighbor(const FHCubeCoord &H, const FHCubeCoord &Dir) const
 {
 	return H + Dir;
 }

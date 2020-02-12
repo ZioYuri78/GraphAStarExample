@@ -73,7 +73,7 @@ public:
 	
 	/* Set a pointer to an hexagonal grid, it can be nullptr */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|NavMesh")
-	void SetHexGrid(class AHexGrid *HGrid);
+	void SetHexGrid(const class AHexGrid *HGrid);
 
 	//////////////////////////////////////////////////////////////////////////
 	/**
@@ -97,8 +97,12 @@ public:
 
 	/* Just a pointer to an hexagonal grid actor */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
-	class AHexGrid *HexGrid;
+	const class AHexGrid *HexGrid;
+
+	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
+	bool bDrawDebug{};
 	
-	
+	UPROPERTY(EditAnywhere, meta = (EditCondition=bDrawDebug), Category = "GraphAStarExample|NavMesh")
+	float DrawDebugDuration{};
 };
 

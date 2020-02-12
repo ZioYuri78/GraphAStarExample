@@ -4,6 +4,7 @@
 #include "GraphAStarNavMesh.h"
 #include "HexGrid/HexGrid.h"
 #include "AIModule/Public/GraphAStar.h"
+#include "DrawDebugHelpers.h"
 
 DEFINE_LOG_CATEGORY(LogGraphAStarExample_NavMesh)
 
@@ -47,6 +48,21 @@ bool FGridPathFilter::IsTraversalAllowed(const int32 NodeA, const int32 NodeB) c
 	// there is some obstacles (like an enemy), in our example we just use a simple implementation
 	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeB))
 	{
+		if (NavMeshRef.bDrawDebug)
+		{
+			FVector NodeALocation{ NavMeshRef.HexGrid->GridTiles[NodeA].WorldPosition + FVector(0.f, 0.f, 100.f) };
+			FVector NodeBLocation{ NavMeshRef.HexGrid->GridTiles[NodeB].WorldPosition + FVector(0.f, 0.f, 100.f) };
+			bool bBlockingTile{ NavMeshRef.HexGrid->GridTiles[NodeB].bIsBlocking };
+			if (bBlockingTile)
+			{
+				DrawDebugLine(NavMeshRef.GetWorld(), NodeALocation, NodeBLocation, FColor::Red, false, NavMeshRef.DrawDebugDuration);
+			}
+			else
+			{
+				DrawDebugLine(NavMeshRef.GetWorld(), NodeALocation, NodeBLocation, FColor::Green, false, NavMeshRef.DrawDebugDuration);
+			}
+		}
+		
 		return !NavMeshRef.HexGrid->GridTiles[NodeB].bIsBlocking;
 	}
 	else
@@ -226,7 +242,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 }
 
 
-void AGraphAStarNavMesh::SetHexGrid(AHexGrid *HGrid)
+void AGraphAStarNavMesh::SetHexGrid(const AHexGrid *HGrid)
 {
 	if (HGrid)
 	{
@@ -263,6 +279,14 @@ AGraphAStarNavMesh::FNodeRef
 AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) const
 {
 	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->CubeCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
+
+	if (bDrawDebug)
+	{
+		FVector NodeRefLocation{ HexGrid->HexToWorld(HexGrid->CubeCoordinates[NodeRef]) + FVector(0.f, 0.f, 75.f) };
+		FVector NeighLocation{ HexGrid->HexToWorld(Neigh) + FVector(0.f, 0.f, 75.f) };
+		DrawDebugLine(GetWorld(), NodeRefLocation, NeighLocation, FColor::White, false, DrawDebugDuration);
+	}
+	
 	return HexGrid->CubeCoordinates.IndexOfByKey(Neigh);
 }
 //////////////////////////////////////////////////////////////////////////

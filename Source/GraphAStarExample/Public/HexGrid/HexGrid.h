@@ -89,14 +89,14 @@ public:
 	 * @see https://www.redblobgames.com/grids/hexagons/#hex-to-pixel
 	 */ 
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid")
-	FVector HexToWorld(const FHCubeCoord &H);
+	FVector HexToWorld(const FHCubeCoord &H) const;
 
 	/**
 	 * Convert coordinates from World space to Cube space.
 	 * @see https://www.redblobgames.com/grids/hexagons/#pixel-to-hex
 	 */ 
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid")
-	FHCubeCoord WorldToHex(const FVector &Location);
+	FHCubeCoord WorldToHex(const FVector &Location) const;
 
 	/** Snap a World coordinate to the Grid space. */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid")
@@ -107,7 +107,7 @@ public:
 	 * @see https://www.redblobgames.com/grids/hexagons/#rounding
 	 */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid")
-	FHCubeCoord HexRound(const FHFractional &F);
+	FHCubeCoord HexRound(const FHFractional &F) const;
 
 	/**
 	 * Compare two Cube coordinate. 
@@ -121,14 +121,14 @@ public:
 	 * @see https://www.redblobgames.com/grids/hexagons/#neighbors
 	 */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid")
-	FHCubeCoord GetDirection(int32 Dir);
+	FHCubeCoord GetDirection(int32 Dir) const;
 
 	/**
 	 * Return the neighbor Cube coordinate in the provided direction. 
 	 * @see https://www.redblobgames.com/grids/hexagons/#neighbors
 	 */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|HexGrid")
-	FHCubeCoord GetNeighbor(const FHCubeCoord &H, const FHCubeCoord &Dir);
+	FHCubeCoord GetNeighbor(const FHCubeCoord &H, const FHCubeCoord &Dir) const;
 
 	/** Array of HexTiles, in our example we fill it in blueprint with the CreationStepDelegate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
@@ -159,7 +159,7 @@ protected:
 
 private:
 
-	FHDirections HDirections{};
+	const FHDirections HDirections{};
 };
 
 
