@@ -3,6 +3,7 @@
 
 #include "HGPathFollowingComponent.h"
 #include "DrawDebugHelpers.h"
+#include "GraphAstarNavMesh.h"
 
 
 void UHGPathFollowingComponent::BeginPlay()
@@ -19,7 +20,7 @@ void UHGPathFollowingComponent::OnActorBump(AActor *SelfActor, AActor *OtherActo
 	Super::OnActorBump(SelfActor, OtherActor, NormalImpulse, Hit);
 
 	// Let's see if we are moving or waiting.
-	if (GetStatus() != EPathFollowingStatus::Idle)
+	if ((SelfActor->GetClass() == OtherActor->GetClass()) && (GetStatus() != EPathFollowingStatus::Idle))
 	{
 		// Just broadcast the event.
 		OnActorBumped.Broadcast(OtherActor->GetActorLocation());

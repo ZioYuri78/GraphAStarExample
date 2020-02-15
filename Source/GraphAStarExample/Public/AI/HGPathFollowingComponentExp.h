@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "HGPathFollowingComponent.generated.h"
+#include "HGPathFollowingComponentExp.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorBumpDelegate, const FVector&, BumpLocation);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorBumpDelegateExp, const FVector &, BumpLocation);
 
 /**
- * We inherit from the UPathFollowingComponent and we override a bunch of functions
- * just to let you know this exist and it can been very powerful.
+ * 
  */
 UCLASS()
-class GRAPHASTAREXAMPLE_API UHGPathFollowingComponent : public UPathFollowingComponent
+class GRAPHASTAREXAMPLE_API UHGPathFollowingComponentExp : public UPathFollowingComponent
 {
 	GENERATED_BODY()
 
@@ -28,7 +28,7 @@ public:
 	 * Executed if a "Bump" happen, we bind this delegate on the activation of our Behavior Tree Service BTS_BindBump
 	 */
 	UPROPERTY(BlueprintAssignable, Category = "GraphAStarExample|PathFollowingComponent")
-	FOnActorBumpDelegate OnActorBumped;
+	FOnActorBumpDelegateExp OnActorBumped;
 
 	/**
 	 * Toggle our debug drawing.

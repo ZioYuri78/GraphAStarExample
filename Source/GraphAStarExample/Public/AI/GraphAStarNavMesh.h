@@ -41,13 +41,14 @@ struct FGridPathFilter
 	 * Whether to accept solutions that do not reach the goal
 	 */
 	bool WantsPartialSolution() const;
-
+	
 protected:
 
 	/**
 	 * A reference to our NavMesh
 	 */
 	const AGraphAStarNavMesh &NavMeshRef;
+
 };
 
 
@@ -100,9 +101,18 @@ public:
 	const class AHexGrid *HexGrid;
 
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
+	bool Avoidance{};
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
 	bool bDrawDebug{};
 	
-	UPROPERTY(EditAnywhere, meta = (EditCondition=bDrawDebug), Category = "GraphAStarExample|NavMesh")
-	float DrawDebugDuration{};
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bDrawDebug"), Category = "GraphAStarExample|NavMesh")
+	bool bIsTemporary{};
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bDrawDebug && bIsTemporary"), Category = "GraphAStarExample|NavMesh")
+	float DrawDebugLifetime{};
+#endif
+	
 };
 

@@ -6,6 +6,7 @@
 #include "AIModule/Public/GraphAStar.h"
 #include "DrawDebugHelpers.h"
 
+
 DEFINE_LOG_CATEGORY(LogGraphAStarExample_NavMesh)
 
 
@@ -46,24 +47,50 @@ bool FGridPathFilter::IsTraversalAllowed(const int32 NodeA, const int32 NodeB) c
 	// if not we assume we can traverse so we return true.
 	// Here you can make a more complex operation like use a line trace to see
 	// there is some obstacles (like an enemy), in our example we just use a simple implementation
-	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeB))
+	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeA) && NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeB))
 	{
+		FVector NodeALocation{ NavMeshRef.HexGrid->GridTiles[NodeA].WorldPosition + FVector(0.f, 0.f, 100.f) };
+		FVector NodeBLocation{ NavMeshRef.HexGrid->GridTiles[NodeB].WorldPosition + FVector(0.f, 0.f, 100.f) };
+		FVector AB{ NodeBLocation - NodeALocation };
+		FVector Dir;
+		float Length;
+		AB.ToDirectionAndLength(Dir, Length);
+
+		bool bBlockingTile{ NavMeshRef.HexGrid->GridTiles[NodeB].bIsBlocking };
+		bool bIsHit{};
+
+		if (NavMeshRef.Avoidance)
+		{
+			FHitResult OutHit;
+			bIsHit = NavMeshRef.GetWorld()->LineTraceSingleByChannel(OutHit, (NodeALocation + Dir * 50.f) + FVector(0.f, 0.f, 25.f), 
+																	 NodeBLocation + FVector(0.f, 0.f, 25.f), ECC_Pawn);
+		}
+		
+#if WITH_EDITOR
+		// ----------- DEBUG ------------
 		if (NavMeshRef.bDrawDebug)
 		{
-			FVector NodeALocation{ NavMeshRef.HexGrid->GridTiles[NodeA].WorldPosition + FVector(0.f, 0.f, 100.f) };
-			FVector NodeBLocation{ NavMeshRef.HexGrid->GridTiles[NodeB].WorldPosition + FVector(0.f, 0.f, 100.f) };
-			bool bBlockingTile{ NavMeshRef.HexGrid->GridTiles[NodeB].bIsBlocking };
 			if (bBlockingTile)
 			{
-				DrawDebugLine(NavMeshRef.GetWorld(), NodeALocation, NodeBLocation, FColor::Red, false, NavMeshRef.DrawDebugDuration);
+				DrawDebugDirectionalArrow(NavMeshRef.GetWorld(), NodeALocation + (Dir * 50.f),
+										  NodeBLocation - (Dir * 50.f), 25.f, FColor::Red, !NavMeshRef.bIsTemporary, NavMeshRef.DrawDebugLifetime);
 			}
 			else
 			{
-				DrawDebugLine(NavMeshRef.GetWorld(), NodeALocation, NodeBLocation, FColor::Green, false, NavMeshRef.DrawDebugDuration);
+				DrawDebugDirectionalArrow(NavMeshRef.GetWorld(), NodeALocation + (Dir * 50.f),
+										  NodeBLocation - (Dir * 50.f), 25.f, FColor::Green, !NavMeshRef.bIsTemporary, NavMeshRef.DrawDebugLifetime);
+			}
+
+			if (bIsHit)
+			{
+				DrawDebugDirectionalArrow(NavMeshRef.GetWorld(), NodeALocation + (Dir * 50.f)+ FVector(0.f, 0.f, 25.f),
+										  NodeBLocation - (Dir * 50.f) + FVector(0.f, 0.f, 25.f), 25.f, FColor::Magenta, !NavMeshRef.bIsTemporary);
 			}
 		}
-		
-		return !NavMeshRef.HexGrid->GridTiles[NodeB].bIsBlocking;
+		// ------------------------------
+#endif
+
+		return !(bBlockingTile || bIsHit);
 	}
 	else
 	{
@@ -138,6 +165,12 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 		else
 		{
 			// ====================== BEGIN OF OUR CODE ===========================================================
+
+			if (GraphAStarNavMesh->bDrawDebug)
+			{
+				FlushPersistentDebugLines(GraphAStarNavMesh->GetWorld());
+			}
+			
 
 			// Reset the PathPoints array
 			Result.Path->GetPathPoints().Reset();
@@ -280,13 +313,19 @@ AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) c
 {
 	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->CubeCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
 
+#if WITH_EDITOR
 	if (bDrawDebug)
 	{
-		FVector NodeRefLocation{ HexGrid->HexToWorld(HexGrid->CubeCoordinates[NodeRef]) + FVector(0.f, 0.f, 75.f) };
+		FVector NodeRefLocation{ HexGrid->HexToWorld(HexGrid->CubeCoordinates[NodeRef]) + FVector(0.f, 1.f, 75.f) };
 		FVector NeighLocation{ HexGrid->HexToWorld(Neigh) + FVector(0.f, 0.f, 75.f) };
-		DrawDebugLine(GetWorld(), NodeRefLocation, NeighLocation, FColor::White, false, DrawDebugDuration);
+		FVector AB{ NeighLocation - NodeRefLocation };
+		FVector Dir;
+		float Length;
+		AB.ToDirectionAndLength(Dir, Length);
+		DrawDebugDirectionalArrow(GetWorld(), NodeRefLocation + Dir * 25.f, NeighLocation - Dir * 25.f, 25.f, FColor::White, !bIsTemporary, DrawDebugLifetime);
 	}
-	
+#endif
+
 	return HexGrid->CubeCoordinates.IndexOfByKey(Neigh);
 }
 //////////////////////////////////////////////////////////////////////////
