@@ -5,6 +5,7 @@
 #include "GraphAstarNavMesh.h"
 #include "HGAIControllerExp.h"
 #include "GameFramework/Character.h"
+#include "DrawDebugHelpers.h"
 
 void UHGPathFollowingComponentExp::BeginPlay()
 {
@@ -32,6 +33,12 @@ void UHGPathFollowingComponentExp::OnActorBump(AActor *SelfActor, AActor *OtherA
 void UHGPathFollowingComponentExp::FollowPathSegment(float DeltaTime)
 {
 	Super::FollowPathSegment(DeltaTime);
+
+	if (Path && DrawDebug)
+	{
+		Path->DebugDraw(MyNavData, FColor::White, nullptr, false);
+		DrawDebugSphere(GetWorld(), GetCurrentNavLocation(), 25.f, 16, FColor::Red);
+	}
 
 #if 0
 	if (Path)
