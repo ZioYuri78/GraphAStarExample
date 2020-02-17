@@ -197,10 +197,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 							// If the index is valid (so we have a HexGrid with tiles) we compute the Location
 							// of the PathPoint, we use the World Space coordinates of the current Cube Coordinate
 							// as a base location and we add an offset to the Z axis based on the corresponding
-							// Tile cost multiplied by a factor of 10.
 							// How to compute the Z axis of the path is up to you, this is only an example!
 							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord) +
-								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost * 10.f);
+								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost);
 						}
 						else
 						{
