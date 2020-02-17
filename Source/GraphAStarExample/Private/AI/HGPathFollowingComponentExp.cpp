@@ -6,6 +6,7 @@
 #include "HGAIControllerExp.h"
 #include "GameFramework/Character.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void UHGPathFollowingComponentExp::BeginPlay()
 {
@@ -40,28 +41,55 @@ void UHGPathFollowingComponentExp::FollowPathSegment(float DeltaTime)
 		DrawDebugSphere(GetWorld(), GetCurrentNavLocation(), 25.f, 16, FColor::Red);
 	}
 
-#if 0
+#if 1
 	if (Path)
 	{
-		FNavPathPoint CurrentNavPoint{};
-		FNavigationPath::GetPathPoint(&Path->AsShared().Get(), GetCurrentPathIndex(), CurrentNavPoint);
+		FNavPathPoint NextPathPoint{};
+		FNavigationPath::GetPathPoint(&Path->AsShared().Get(), GetNextPathIndex(), NextPathPoint);
+		FNavPathPoint CurrentPathPoint{};
+		FNavigationPath::GetPathPoint(&Path->AsShared().Get(), GetCurrentPathIndex(), CurrentPathPoint);
 
-		FNavPathPoint NextNavPoint{};
-		FNavigationPath::GetPathPoint(&Path->AsShared().Get(), GetNextPathIndex(), NextNavPoint);
+		FVector CPPtoNPP{ NextPathPoint.Location - CurrentPathPoint.Location };
+		float CPPtoNPPdist2D{ FVector::Dist2D(CurrentPathPoint.Location, NextPathPoint.Location) };
 
-		float CurrentZ{ CurrentNavPoint.Location.Z };
-		float NextZ{ NextNavPoint.Location.Z };
-		float HeightDifference{ NextZ - CurrentZ };
-		if (NextZ > CurrentZ && HeightDifference > 50.f)
+		FVector ANLtoNPP{ NextPathPoint.Location - MovementComp->GetActorNavLocation() };
+		float ANLtoNPPdist2D{ FVector::Dist2D(MovementComp->GetActorNavLocation(), NextPathPoint.Location) };
+
+		float CPPtoNPPdZ{ NextPathPoint.Location.Z - CurrentPathPoint.Location.Z };
+
+		float Dot = FVector::DotProduct(CPPtoNPP.GetSafeNormal(), MovementComp->GetOwner()->GetActorForwardVector());
+
+		ACharacter *Character{ Cast<ACharacter>(MovementComp->GetOwner()) };
+		UCharacterMovementComponent *CharMove{ Cast<UCharacterMovementComponent>(MovementComp) };
+		if (CPPtoNPPdZ >= 20.f && CPPtoNPPdZ < 70.f)
 		{
-			AHGAIControllerExp *HGAIController{ Cast<AHGAIControllerExp>(GetOwner()) };
-			if (HGAIController)
+			if (FMath::IsWithinInclusive(ANLtoNPPdist2D, 70.f, 170.f) && Dot > 0.9f)
 			{
-				ACharacter *Player{ Cast<ACharacter>(HGAIController->GetPawn()) };
-				Player->Jump();
+				if (Character && CharMove && !MovementComp->IsFalling())
+				{
+					if (CharMove->JumpZVelocity > 500.f)
+					{
+						CharMove->JumpZVelocity = 500.f;
+					}
+									
+					Character->Jump();
+				}
 			}
 		}
+		else if (CPPtoNPPdZ >= 70.f)
+		{
 
+			if (FMath::IsWithinInclusive(ANLtoNPPdist2D, 70.f, 170.f) && Dot > 0.9f)
+			{
+				if (CharMove)
+				{
+					CharMove->JumpZVelocity = 650.f;
+										
+					Character->Jump();
+				}
+			}
+		}
 	}
+
 #endif
 }
