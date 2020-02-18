@@ -61,9 +61,12 @@ void UHGPathFollowingComponentExp::FollowPathSegment(float DeltaTime)
 
 		ACharacter *Character{ Cast<ACharacter>(MovementComp->GetOwner()) };
 		UCharacterMovementComponent *CharMove{ Cast<UCharacterMovementComponent>(MovementComp) };
+
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, DeltaTime, FColor::Red, *FString::SanitizeFloat(ANLtoNPPdist2D));
+		GEngine->AddOnScreenDebugMessage(INDEX_NONE, DeltaTime, FColor::Red, *FString::SanitizeFloat(Dot));
 		if (CPPtoNPPdZ >= 20.f && CPPtoNPPdZ < 70.f)
 		{
-			if (FMath::IsWithinInclusive(ANLtoNPPdist2D, 70.f, 170.f) && Dot > 0.9f)
+			if (/*FMath::IsWithinInclusive(ANLtoNPPdist2D, 70.f, 170.f)*/ANLtoNPPdist2D > 120.f && Dot > 0.9f)
 			{
 				if (Character && CharMove && !MovementComp->IsFalling())
 				{
@@ -78,8 +81,7 @@ void UHGPathFollowingComponentExp::FollowPathSegment(float DeltaTime)
 		}
 		else if (CPPtoNPPdZ >= 70.f)
 		{
-
-			if (FMath::IsWithinInclusive(ANLtoNPPdist2D, 70.f, 170.f) && Dot > 0.9f)
+			if (/*FMath::IsWithinInclusive(ANLtoNPPdist2D, 70.f, 170.f)*/ANLtoNPPdist2D > 120.f && Dot > 0.9f)
 			{
 				if (CharMove)
 				{
