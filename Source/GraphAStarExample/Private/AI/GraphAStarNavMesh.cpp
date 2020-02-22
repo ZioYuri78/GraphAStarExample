@@ -104,8 +104,16 @@ bool FGridPathFilter::WantsPartialSolution() const
 	// Just return true
 	return true;
 }
+
+
+
 //==== END OF FGridPathFilter functions implementation ====
 
+AGraphAStarNavMesh::AGraphAStarNavMesh()
+{
+	// Need it for EQS Test Pawn
+	TestPathImplementation = TestPath;	
+}
 
 FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query)
 {
@@ -125,6 +133,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	// NOTE: remember, our AGraphAStarNavMesh inherit from ARecastNavMesh that inherit from ANavigationData so we can do the cast.
 	const AGraphAStarNavMesh *GraphAStarNavMesh{ Cast<const AGraphAStarNavMesh>(Self) };
 	
+	// This RecastNavMeshImpl check is probably useless here, we don't care because we don't
+	// have if for our class and the parent class version isn't used here because we are in the
+	// A* implementation.
 	if (Self == NULL || GraphAStarNavMesh->GetRecastNavMeshImpl() == NULL)
 	{
 		return ENavigationQueryResult::Error;
@@ -275,6 +286,62 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 }
 
 
+bool AGraphAStarNavMesh::TestPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query, int32 *NumVisitedNodes)
+{
+	SCOPE_CYCLE_COUNTER(STAT_Navigation_HGASTestPath);
+	CSV_SCOPED_TIMING_STAT_EXCLUSIVE(Pathfinding);
+
+	const ANavigationData *Self = Query.NavData.Get();
+	check(Cast<const AGraphAStarNavMesh>(Self));
+
+	const AGraphAStarNavMesh *GraphAStarNavMesh = (const AGraphAStarNavMesh *)Self;
+	if (Self == NULL)
+	{
+		return false;
+	}
+	
+	if (!GraphAStarNavMesh->HexGrid)
+	{
+		UE_LOG(LogGraphAStarExample_NavMesh, Warning, TEXT("HexGrid is nullptr, we can't run TestPath"));
+		return false;
+	}
+
+	bool bPathExists = true;
+
+	const FNavigationQueryFilter *NavFilter = Query.QueryFilter.Get();
+	if (NavFilter)
+	{
+		const FVector AdjustedEndLocation = NavFilter->GetAdjustedEndLocation(Query.EndLocation);
+		if ((Query.StartLocation - AdjustedEndLocation).IsNearlyZero() == false)
+		{			
+			FHCubeCoord StartCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.StartLocation) };
+			FHCubeCoord EndCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.EndLocation) };
+
+			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(StartCCoord) };
+			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(EndCCoord) };
+			
+			TArray<int32> PathIndices;			
+			FGraphAStar<AGraphAStarNavMesh> Pathfinder(*GraphAStarNavMesh);			
+			EGraphAStarResult AStarResult{ Pathfinder.FindPath(StartIdx, EndIdx, FGridPathFilter(*GraphAStarNavMesh), PathIndices) };
+			switch (AStarResult)
+			{
+				case SearchSuccess:
+					bPathExists = true;
+					break;
+
+				case GoalUnreachable:
+				case InfiniteLoop:
+				case SearchFail:
+					bPathExists = false;
+					break;
+			}			
+		}
+	}
+
+	return bPathExists;
+}
+
+
 void AGraphAStarNavMesh::SetHexGrid(const AHexGrid *HGrid)
 {
 	if (HGrid)
@@ -282,6 +349,7 @@ void AGraphAStarNavMesh::SetHexGrid(const AHexGrid *HGrid)
 		// If the pointer is valid we will use our implementation of the FindPath function
 		HexGrid = HGrid;
 		FindPathImplementation = FindPath;
+		TestPathImplementation = TestPath;
 	}
 	else
 	{
@@ -291,6 +359,7 @@ void AGraphAStarNavMesh::SetHexGrid(const AHexGrid *HGrid)
 		// but i start from the assumption that we are inheriting from ARecastNavMesh
 		HexGrid = nullptr;
 		FindPathImplementation = Super::FindPath;
+		TestPathImplementation = Super::TestPath;
 	}
 }
 

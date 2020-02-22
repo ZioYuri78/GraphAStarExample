@@ -66,10 +66,10 @@ void AHexGrid::CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, c
 	for (int32 Q{ -Radius }; Q <= Radius; ++Q)
 	{
 		// Calculate R1
-		int32 R1{ FMath::Max(TArray<int32>{-Radius, -Q - Radius}) };
+		int32 R1{ FMath::Max(-Radius, -Q - Radius) };
 
 		// Calculate R2
-		int32 R2{ FMath::Min(TArray<int32>{Radius, -Q + Radius}) };
+		int32 R2{ FMath::Min(Radius, -Q + Radius) };
 
 		for (int32 R{ R1 }; R <= R2; ++R)
 		{

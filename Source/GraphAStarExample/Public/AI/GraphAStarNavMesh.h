@@ -9,6 +9,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogGraphAStarExample_NavMesh, Log, All);
 
 DECLARE_CYCLE_STAT(TEXT("Hex Grid A* Pathfinding"), STAT_Navigation_HGASPathfinding, STATGROUP_Navigation);
+DECLARE_CYCLE_STAT(TEXT("Hex Grid A* TestPath"), STAT_Navigation_HGASTestPath, STATGROUP_Navigation);
 
 /**
  * TQueryFilter (FindPath's parameter) filter class is what decides which graph edges can be used and at what cost.
@@ -60,6 +61,8 @@ class GRAPHASTAREXAMPLE_API AGraphAStarNavMesh : public ARecastNavMesh
 {
 	GENERATED_BODY()
 
+	AGraphAStarNavMesh();
+
 public:
 
 	/**
@@ -72,6 +75,12 @@ public:
 	 */
 	static FPathFindingResult FindPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query);
 	
+	/**
+	 * Exp, used with EQS Generator Path finding test
+	 */
+	static bool TestPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query, int32 *NumVisitedNodes);
+
+
 	/* Set a pointer to an hexagonal grid, it can be nullptr */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|NavMesh")
 	void SetHexGrid(const class AHexGrid *HGrid);
@@ -97,7 +106,7 @@ public:
 
 
 	/* Just a pointer to an hexagonal grid actor */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
 	const class AHexGrid *HexGrid;
 
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
