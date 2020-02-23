@@ -82,7 +82,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	// NOTE: remember, our AGraphAStarNavMesh inherit from ARecastNavMesh that inherit from ANavigationData so we can do the cast.
 	const AGraphAStarNavMesh *GraphAStarNavMesh{ Cast<const AGraphAStarNavMesh>(Self) };
 	
-	if (Self == NULL || GraphAStarNavMesh->GetRecastNavMeshImpl() == NULL)
+	if (Self == NULL)
 	{
 		return ENavigationQueryResult::Error;
 	}
@@ -133,8 +133,8 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 			
 			// and than we search in the HexGrid CubeCoordinates array for the index of items 
 			// equals to our temp coordinates.
-			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(StartCCoord) };
-			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(EndCCoord)};
+			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(StartCCoord) };
+			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(EndCCoord)};
 
 			// We need the index because the FGraphAStar work with indexes!
 
@@ -185,7 +185,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 					for (const int32 &PathIndex : PathIndices)
 					{
 						// Get a temporary Cube Coordinate from our HexGrid
-						FHCubeCoord CubeCoord{ GraphAStarNavMesh->HexGrid->CubeCoordinates[PathIndex] };
+						FHCubeCoord GridCoord{ GraphAStarNavMesh->HexGrid->GridCoordinates[PathIndex] };
 
 						// Create a temporary FNavPathPoint
 						FNavPathPoint PathPoint{};
@@ -196,17 +196,18 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 						{
 							// If the index is valid (so we have a HexGrid with tiles) we compute the Location
 							// of the PathPoint, we use the World Space coordinates of the current Cube Coordinate
-							// as a base location and we add an offset to the Z axis based on the corresponding
+							// as a base location and we add an offset to the Z.
 							// How to compute the Z axis of the path is up to you, this is only an example!
-							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord) +
-								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost);
+							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord) +
+								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost +
+								GraphAStarNavMesh->PathPointZOffset);
 						}
 						else
 						{
 							// If the current PathIndex isn't a valid index for the GridTiles array
 							// (so we assume our HexGrid is only a "logical" grid with only cube coordinates and no tiles)
 							// we simply transform the coordinates from cube space to world space and pass it to the PathPoint
-							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord);
+							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord);
 						}
 
 						// We finally add the computed PathPoint to the Path::PathPoints array
@@ -255,13 +256,13 @@ int32 AGraphAStarNavMesh::GetNeighbourCount(FNodeRef NodeRef) const
 
 bool AGraphAStarNavMesh::IsValidRef(FNodeRef NodeRef) const
 {
-	return HexGrid->CubeCoordinates.IsValidIndex(NodeRef);
+	return HexGrid->GridCoordinates.IsValidIndex(NodeRef);
 }
 
 AGraphAStarNavMesh::FNodeRef
 AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) const
 {
-	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->CubeCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
-	return HexGrid->CubeCoordinates.IndexOfByKey(Neigh);
+	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->GridCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
+	return HexGrid->GridCoordinates.IndexOfByKey(Neigh);
 }
 //////////////////////////////////////////////////////////////////////////

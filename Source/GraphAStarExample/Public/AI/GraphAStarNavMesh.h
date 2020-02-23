@@ -99,6 +99,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
 	class AHexGrid *HexGrid;
 	
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
+	float PathPointZOffset{0.f};
 };
 
