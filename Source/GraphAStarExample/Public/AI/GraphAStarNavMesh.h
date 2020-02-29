@@ -65,6 +65,8 @@ class GRAPHASTAREXAMPLE_API AGraphAStarNavMesh : public ARecastNavMesh
 
 public:
 
+	
+	
 	/**
 	 * the function is static for a reason, (wiki copy-paste->) 
 	 * comments in the code explain it's for performance reasons: Epic are concerned 

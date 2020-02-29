@@ -115,6 +115,7 @@ AGraphAStarNavMesh::AGraphAStarNavMesh()
 	TestPathImplementation = TestPath;	
 }
 
+
 FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &AgentProperties, const FPathFindingQuery &Query)
 {
 	// =================================================================================================
@@ -136,7 +137,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	// This RecastNavMeshImpl check is probably useless here, we don't care because we don't
 	// have if for our class and the parent class version isn't used here because we are in the
 	// A* implementation.
-	if (Self == NULL || GraphAStarNavMesh->GetRecastNavMeshImpl() == NULL)
+	if (Self == NULL/* || GraphAStarNavMesh->GetRecastNavMeshImpl() == NULL*/)
 	{
 		return ENavigationQueryResult::Error;
 	}
@@ -302,7 +303,7 @@ bool AGraphAStarNavMesh::TestPath(const FNavAgentProperties &AgentProperties, co
 	
 	if (!GraphAStarNavMesh->HexGrid)
 	{
-		UE_LOG(LogGraphAStarExample_NavMesh, Warning, TEXT("HexGrid is nullptr, we can't run TestPath"));
+		//UE_LOG(LogGraphAStarExample_NavMesh, Warning, TEXT("HexGrid is nullptr, we can't run TestPath"));
 		return false;
 	}
 
