@@ -105,14 +105,17 @@ bool FGridPathFilter::WantsPartialSolution() const
 	return true;
 }
 
-
-
 //==== END OF FGridPathFilter functions implementation ====
+
 
 AGraphAStarNavMesh::AGraphAStarNavMesh()
 {
-	// Need it for EQS Test Pawn
+	// Need it for EQS Test Pawn, you also need to manually set the HexGrid
+	// in the GraphAStarRecast details panel.
+#if WITH_EDITOR
 	TestPathImplementation = TestPath;	
+	FindPathImplementation = FindPath;
+#endif
 }
 
 
@@ -145,8 +148,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	// This struct contains the result of our search and the Path that the AI will follow
 	FPathFindingResult Result(ENavigationQueryResult::Error);
 
+	
 	FNavigationPath *NavPath = Query.PathInstanceToFill.Get();
-	FNavMeshPath *NavMeshPath = NavPath ? NavPath->CastPath<FNavMeshPath>() : nullptr;
+	FHexNavMeshPath *NavMeshPath = NavPath ? NavPath->CastPath<FHexNavMeshPath>() : nullptr;
 
 	if (NavMeshPath)
 	{
@@ -155,9 +159,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	}
 	else
 	{
-		Result.Path = Self->CreatePathInstance<FNavMeshPath>(Query);
+		Result.Path = Self->CreatePathInstance<FHexNavMeshPath>(Query);
 		NavPath = Result.Path.Get();
-		NavMeshPath = NavPath ? NavPath->CastPath<FNavMeshPath>() : nullptr;
+		NavMeshPath = NavPath ? NavPath->CastPath<FHexNavMeshPath>() : nullptr;
 	}
 
 	const FNavigationQueryFilter *NavFilter = Query.QueryFilter.Get();
@@ -177,12 +181,12 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 		else
 		{
 			// ====================== BEGIN OF OUR CODE ===========================================================
-
+#if WITH_EDITOR
 			if (GraphAStarNavMesh->bDrawDebug)
 			{
 				FlushPersistentDebugLines(GraphAStarNavMesh->GetWorld());
 			}
-			
+#endif
 
 			// Reset the PathPoints array
 			Result.Path->GetPathPoints().Reset();
@@ -232,19 +236,20 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 				// we only have an array of indexes so we have to compute the path locations
 				// from these indexes and pass them to the PathPoints array of the Path
 				// that the AI will follow.
-				case SearchSuccess:
+				case SearchSuccess:					
 
 					// Search succeeded
 					Result.Result = ENavigationQueryResult::Success;
 					
 					// PathIndices array computed by FGraphAStar will not contain the starting point, so
 					// we need to add it manually the the Path::PathPoints array
-					Result.Path->GetPathPoints().Add(FNavPathPoint(Query.StartLocation));
+					Result.Path->GetPathPoints().Add(FNavPathPoint(Query.StartLocation));										
 
 					// Let's traverse the PathIndices array and build the FNavPathPoints we 
 					// need to add to the Path.
 					for (const int32 &PathIndex : PathIndices)
-					{
+					{						
+
 						// Get a temporary Cube Coordinate from our HexGrid
 						FHCubeCoord CubeCoord{ GraphAStarNavMesh->HexGrid->CubeCoordinates[PathIndex] };
 
@@ -262,6 +267,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 							// How to compute the Z axis of the path is up to you, this is only an example!
 							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord) +
 								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost);
+
+							// PathCost accumulator
+							NavMeshPath->CurrentPathCost += GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost;
 						}
 						else
 						{
@@ -269,6 +277,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 							// (so we assume our HexGrid is only a "logical" grid with only cube coordinates and no tiles)
 							// we simply transform the coordinates from cube space to world space and pass it to the PathPoint
 							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord);
+
+							// PathCost accumulator
+							NavMeshPath->CurrentPathCost++;
 						}
 
 						// We finally add the computed PathPoint to the Path::PathPoints array

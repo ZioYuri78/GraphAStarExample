@@ -53,6 +53,26 @@ protected:
 };
 
 
+// We inherit this struct because we need a custom GetCost/GetLength
+struct FHexNavMeshPath : public FNavMeshPath
+{
+	FORCEINLINE
+	virtual float GetCostFromIndex(int32 PathPointIndex) const override
+	{		
+		return CurrentPathCost;
+	}
+
+	FORCEINLINE
+	virtual float GetLengthFromPosition(FVector SegmentStart, uint32 NextPathPointIndex) const override
+	{
+		// We exclude the starting point so -1	
+		return PathPoints.Num() - 1;
+	}
+
+	float CurrentPathCost{0};
+};
+
+
 /**
  * 
  */
@@ -65,8 +85,6 @@ class GRAPHASTAREXAMPLE_API AGraphAStarNavMesh : public ARecastNavMesh
 
 public:
 
-	
-	
 	/**
 	 * the function is static for a reason, (wiki copy-paste->) 
 	 * comments in the code explain it's for performance reasons: Epic are concerned 
@@ -112,8 +130,9 @@ public:
 	const class AHexGrid *HexGrid;
 
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
-	bool Avoidance{};
+	bool Avoidance{};	
 
+	// Debug
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
 	bool bDrawDebug{};
@@ -124,6 +143,7 @@ public:
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bDrawDebug && bIsTemporary"), Category = "GraphAStarExample|NavMesh")
 	float DrawDebugLifetime{};
 #endif
+	
 	
 };
 
