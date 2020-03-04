@@ -136,7 +136,7 @@ public:
 
 	/** Array of Cube coordinates that compose the grid. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
-	TArray<FHCubeCoord> CubeCoordinates{};
+	TArray<FHCubeCoord> GridCoordinates{};
 
 	/**
 	 * Layout of the tile (i know is very misleading, please read the article)

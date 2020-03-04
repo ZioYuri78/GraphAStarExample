@@ -44,7 +44,7 @@ void AHexGrid::CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, c
 	{
 		Size += 6 * i;
 	}
-	CubeCoordinates.Reserve(Size);
+	GridCoordinates.Reserve(Size);
 
 	// Check if we provided a delegate, if yes we also reserve space in the GridTiles array.
 	if (CreationStepDelegate.IsBound())
@@ -74,7 +74,7 @@ void AHexGrid::CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, c
 		for (int32 R{ R1 }; R <= R2; ++R)
 		{
 			FHCubeCoord CCoord{ FIntVector(Q, R, -Q - R) };
-			CubeCoordinates.Add(CCoord);
+			GridCoordinates.Add(CCoord);
 
 			// If we provided a delegate execute it, with this we can make additional operations on each step of the loop,
 			// in our example i use it in the blueprint to add a tile on each cube coordinate. 

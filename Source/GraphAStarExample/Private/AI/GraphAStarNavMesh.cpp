@@ -198,8 +198,8 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 			
 			// and than we search in the HexGrid CubeCoordinates array for the index of items 
 			// equals to our temp coordinates.
-			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(StartCCoord) };
-			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(EndCCoord)};
+			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(StartCCoord) };
+			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(EndCCoord)};
 
 			// We need the index because the FGraphAStar work with indexes!
 
@@ -251,7 +251,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 					{						
 
 						// Get a temporary Cube Coordinate from our HexGrid
-						FHCubeCoord CubeCoord{ GraphAStarNavMesh->HexGrid->CubeCoordinates[PathIndex] };
+						FHCubeCoord GridCoord{ GraphAStarNavMesh->HexGrid->GridCoordinates[PathIndex] };
 
 						// Create a temporary FNavPathPoint
 						FNavPathPoint PathPoint{};
@@ -264,9 +264,10 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 							// of the PathPoint, we use the World Space coordinates of the current Cube Coordinate
 							// as a base location and we add an offset to the Z axis based on the corresponding
 							// Tile cost multiplied by a factor of 10. (NO MORE BECAUSE BROKEN THE PATH ON TILES WITH HIGH COST)
-							// How to compute the Z axis of the path is up to you, this is only an example!
-							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord) +
-								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost);
+							// How to compute the Z axis of the path is up to you, this is only an example!							
+							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord) +
+								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost +
+										GraphAStarNavMesh->PathPointZOffset);
 
 							// PathCost accumulator
 							NavMeshPath->CurrentPathCost += GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost;
@@ -276,7 +277,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 							// If the current PathIndex isn't a valid index for the GridTiles array
 							// (so we assume our HexGrid is only a "logical" grid with only cube coordinates and no tiles)
 							// we simply transform the coordinates from cube space to world space and pass it to the PathPoint
-							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(CubeCoord);
+							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord);
 
 							// PathCost accumulator
 							NavMeshPath->CurrentPathCost++;
@@ -329,8 +330,8 @@ bool AGraphAStarNavMesh::TestPath(const FNavAgentProperties &AgentProperties, co
 			FHCubeCoord StartCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.StartLocation) };
 			FHCubeCoord EndCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.EndLocation) };
 
-			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(StartCCoord) };
-			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->CubeCoordinates.IndexOfByKey(EndCCoord) };
+			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(StartCCoord) };
+			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(EndCCoord) };
 			
 			TArray<int32> PathIndices;			
 			FGraphAStar<AGraphAStarNavMesh> Pathfinder(*GraphAStarNavMesh);			
@@ -386,18 +387,18 @@ int32 AGraphAStarNavMesh::GetNeighbourCount(FNodeRef NodeRef) const
 
 bool AGraphAStarNavMesh::IsValidRef(FNodeRef NodeRef) const
 {
-	return HexGrid->CubeCoordinates.IsValidIndex(NodeRef);
+	return HexGrid->GridCoordinates.IsValidIndex(NodeRef);
 }
 
 AGraphAStarNavMesh::FNodeRef
 AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) const
 {
-	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->CubeCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
+	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->GridCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
 
 #if WITH_EDITOR
 	if (bDrawDebug)
 	{
-		FVector NodeRefLocation{ HexGrid->HexToWorld(HexGrid->CubeCoordinates[NodeRef]) + FVector(0.f, 1.f, 75.f) };
+		FVector NodeRefLocation{ HexGrid->HexToWorld(HexGrid->GridCoordinates[NodeRef]) + FVector(0.f, 1.f, 75.f) };
 		FVector NeighLocation{ HexGrid->HexToWorld(Neigh) + FVector(0.f, 0.f, 75.f) };
 		FVector AB{ NeighLocation - NodeRefLocation };
 		FVector Dir;
@@ -407,6 +408,6 @@ AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) c
 	}
 #endif
 
-	return HexGrid->CubeCoordinates.IndexOfByKey(Neigh);
+	return HexGrid->GridCoordinates.IndexOfByKey(Neigh);
 }
 //////////////////////////////////////////////////////////////////////////

@@ -132,6 +132,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
 	bool Avoidance{};	
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
+	float PathPointZOffset{ 0.f };
+
+
 	// Debug
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
