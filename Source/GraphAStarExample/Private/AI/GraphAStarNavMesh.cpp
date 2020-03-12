@@ -2,10 +2,12 @@
 
 
 #include "GraphAStarNavMesh.h"
-#include "HexGrid/HexGrid.h"
+//#include "HexGrid/HexGrid.h"
 #include "AIModule/Public/GraphAStar.h"
 #include "DrawDebugHelpers.h"
+#include "HexGridLibPlugin/Public/HexGridLibPluginBPLibrary.h"
 
+typedef UHexGridLibPluginBPLibrary HGLP;
 
 DEFINE_LOG_CATEGORY(LogGraphAStarExample_NavMesh)
 
@@ -33,7 +35,7 @@ float FGridPathFilter::GetTraversalCost(const int32 StartNodeRef, const int32 En
 	// look at GraphAStar.h line 244: ensure(NewTraversalCost > 0);
 	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(EndNodeRef))
 	{
-		return NavMeshRef.HexGrid->GridTiles[EndNodeRef].Cost;
+		return NavMeshRef.HexGrid->GridTiles[EndNodeRef].TileCost;
 	}
 	else
 	{
@@ -49,8 +51,8 @@ bool FGridPathFilter::IsTraversalAllowed(const int32 NodeA, const int32 NodeB) c
 	// there is some obstacles (like an enemy), in our example we just use a simple implementation
 	if (NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeA) && NavMeshRef.HexGrid->GridTiles.IsValidIndex(NodeB))
 	{
-		FVector NodeALocation{ NavMeshRef.HexGrid->GridTiles[NodeA].WorldPosition + FVector(0.f, 0.f, 100.f) };
-		FVector NodeBLocation{ NavMeshRef.HexGrid->GridTiles[NodeB].WorldPosition + FVector(0.f, 0.f, 100.f) };
+		FVector NodeALocation{ NavMeshRef.HexGrid->GridTiles[NodeA].WorldCoordinates + FVector(0.f, 0.f, 100.f) };
+		FVector NodeBLocation{ NavMeshRef.HexGrid->GridTiles[NodeB].WorldCoordinates + FVector(0.f, 0.f, 100.f) };
 		FVector AB{ NodeBLocation - NodeALocation };
 		FVector Dir;
 		float Length;
@@ -191,15 +193,20 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 			// Reset the PathPoints array
 			Result.Path->GetPathPoints().Reset();
 
+
+			const FHTileLayout &TempLayout{ GraphAStarNavMesh->HexGrid->TileLayout };
+			const AHexGridActor &TempGrid{ *GraphAStarNavMesh->HexGrid };
+
 			// The pathfinder need a starting and ending point, so we create two temporary
-			// cube coordinates from the Query start and ending location
-			FHCubeCoord StartCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.StartLocation) };
-			FHCubeCoord EndCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.EndLocation) };
+			// cube coordinates from the Query start and ending location			
+			FHCubeCoord StartCCoord{ HGLP::WorldToHex(TempLayout, Query.StartLocation) };
+			FHCubeCoord EndCCoord{ HGLP::WorldToHex(TempLayout, Query.EndLocation) };
 			
 			// and than we search in the HexGrid CubeCoordinates array for the index of items 
 			// equals to our temp coordinates.
-			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(StartCCoord) };
-			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(EndCCoord)};
+			const int32 StartIdx{ TempGrid.GridTiles.IndexOfByPredicate([&](const FHTile &Tile) {return Tile.GridCoordinates == StartCCoord; }) };
+			const int32 EndIdx{ TempGrid.GridTiles.IndexOfByPredicate([&](const FHTile &Tile) {return Tile.GridCoordinates == EndCCoord; }) };
+			
 
 			// We need the index because the FGraphAStar work with indexes!
 
@@ -251,37 +258,37 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 					{						
 
 						// Get a temporary Cube Coordinate from our HexGrid
-						FHCubeCoord GridCoord{ GraphAStarNavMesh->HexGrid->GridCoordinates[PathIndex] };
+						FHCubeCoord GridCoord = TempGrid.GridTiles[PathIndex].GridCoordinates;
 
 						// Create a temporary FNavPathPoint
 						FNavPathPoint PathPoint{};
 
 						// Because we can create HexGrid with only Cube Coordinates and no tiles
 						// we look if the current index we are using is a valid index for the GridTiles array
-						if (GraphAStarNavMesh->HexGrid->GridTiles.IsValidIndex(PathIndex))
-						{
+						//if (GraphAStarNavMesh->HexGrid->GridTiles.IsValidIndex(PathIndex))
+						//{
 							// If the index is valid (so we have a HexGrid with tiles) we compute the Location
 							// of the PathPoint, we use the World Space coordinates of the current Cube Coordinate
 							// as a base location and we add an offset to the Z axis based on the corresponding
 							// Tile cost multiplied by a factor of 10. (NO MORE BECAUSE BROKEN THE PATH ON TILES WITH HIGH COST)
 							// How to compute the Z axis of the path is up to you, this is only an example!							
-							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord) +
-								FVector(0.f, 0.f, GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost +
+							PathPoint.Location = HGLP::HexToWorld(TempLayout, GridCoord) +
+								FVector(0.f, 0.f, TempGrid.GridTiles[PathIndex].TileCost +
 										GraphAStarNavMesh->PathPointZOffset);
 
 							// PathCost accumulator
-							NavMeshPath->CurrentPathCost += GraphAStarNavMesh->HexGrid->GridTiles[PathIndex].Cost;
-						}
-						else
-						{
+							NavMeshPath->CurrentPathCost += TempGrid.GridTiles[PathIndex].TileCost;
+						//}
+						//else
+						//{
 							// If the current PathIndex isn't a valid index for the GridTiles array
 							// (so we assume our HexGrid is only a "logical" grid with only cube coordinates and no tiles)
 							// we simply transform the coordinates from cube space to world space and pass it to the PathPoint
-							PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord);
+							//PathPoint.Location = GraphAStarNavMesh->HexGrid->HexToWorld(GridCoord);
 
 							// PathCost accumulator
-							NavMeshPath->CurrentPathCost++;
-						}
+							//NavMeshPath->CurrentPathCost++;
+						//}
 
 						// We finally add the computed PathPoint to the Path::PathPoints array
 						Result.Path->GetPathPoints().Add(FNavPathPoint(PathPoint));
@@ -319,6 +326,9 @@ bool AGraphAStarNavMesh::TestPath(const FNavAgentProperties &AgentProperties, co
 		return false;
 	}
 
+	const FHTileLayout &TempLayout{ GraphAStarNavMesh->HexGrid->TileLayout };
+	const AHexGridActor &TempGrid{ *GraphAStarNavMesh->HexGrid };
+
 	bool bPathExists = true;
 
 	const FNavigationQueryFilter *NavFilter = Query.QueryFilter.Get();
@@ -326,12 +336,12 @@ bool AGraphAStarNavMesh::TestPath(const FNavAgentProperties &AgentProperties, co
 	{
 		const FVector AdjustedEndLocation = NavFilter->GetAdjustedEndLocation(Query.EndLocation);
 		if ((Query.StartLocation - AdjustedEndLocation).IsNearlyZero() == false)
-		{			
-			FHCubeCoord StartCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.StartLocation) };
-			FHCubeCoord EndCCoord{ GraphAStarNavMesh->HexGrid->WorldToHex(Query.EndLocation) };
+		{
+			FHCubeCoord StartCCoord{ HGLP::WorldToHex(TempLayout, Query.StartLocation) };
+			FHCubeCoord EndCCoord{ HGLP::WorldToHex(TempLayout, Query.EndLocation) };
 
-			const int32 StartIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(StartCCoord) };
-			const int32 EndIdx{ GraphAStarNavMesh->HexGrid->GridCoordinates.IndexOfByKey(EndCCoord) };
+			const int32 StartIdx{ TempGrid.GridTiles.IndexOfByPredicate([&](const FHTile &Tile) {return Tile.GridCoordinates == StartCCoord; }) };
+			const int32 EndIdx{ TempGrid.GridTiles.IndexOfByPredicate([&](const FHTile &Tile) {return Tile.GridCoordinates == EndCCoord; }) };
 			
 			TArray<int32> PathIndices;			
 			FGraphAStar<AGraphAStarNavMesh> Pathfinder(*GraphAStarNavMesh);			
@@ -355,7 +365,7 @@ bool AGraphAStarNavMesh::TestPath(const FNavAgentProperties &AgentProperties, co
 }
 
 
-void AGraphAStarNavMesh::SetHexGrid(const AHexGrid *HGrid)
+void AGraphAStarNavMesh::SetHexGrid(const AHexGridActor *HGrid)
 {
 	if (HGrid)
 	{
@@ -387,19 +397,20 @@ int32 AGraphAStarNavMesh::GetNeighbourCount(FNodeRef NodeRef) const
 
 bool AGraphAStarNavMesh::IsValidRef(FNodeRef NodeRef) const
 {
-	return HexGrid->GridCoordinates.IsValidIndex(NodeRef);
+	return HexGrid->GridTiles.IsValidIndex(NodeRef);
 }
 
 AGraphAStarNavMesh::FNodeRef
 AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) const
 {
-	FHCubeCoord Neigh{ HexGrid->GetNeighbor(HexGrid->GridCoordinates[NodeRef], HexGrid->GetDirection(NeiIndex)) };
+	FHCubeCoord Neigh{ HGLP::GetNeighbor(HexGrid->GridTiles[NodeRef].GridCoordinates, HGLP::GetDirection(NeiIndex)) };
 
 #if WITH_EDITOR
 	if (bDrawDebug)
 	{
-		FVector NodeRefLocation{ HexGrid->HexToWorld(HexGrid->GridCoordinates[NodeRef]) + FVector(0.f, 1.f, 75.f) };
-		FVector NeighLocation{ HexGrid->HexToWorld(Neigh) + FVector(0.f, 0.f, 75.f) };
+		FHTileLayout TempLayout{ HexGrid->TileLayout };
+		FVector NodeRefLocation{ HGLP::HexToWorld(TempLayout, HexGrid->GridTiles[NodeRef].GridCoordinates) + FVector(0.f, 1.f, 75.f) };
+		FVector NeighLocation{ HGLP::HexToWorld(TempLayout, Neigh) + FVector(0.f, 0.f, 75.f) };
 		FVector AB{ NeighLocation - NodeRefLocation };
 		FVector Dir;
 		float Length;
@@ -407,7 +418,7 @@ AGraphAStarNavMesh::GetNeighbour(const FNodeRef NodeRef, const int32 NeiIndex) c
 		DrawDebugDirectionalArrow(GetWorld(), NodeRefLocation + Dir * 25.f, NeighLocation - Dir * 25.f, 25.f, FColor::White, !bIsTemporary, DrawDebugLifetime);
 	}
 #endif
-
-	return HexGrid->GridCoordinates.IndexOfByKey(Neigh);
+	
+	return HexGrid->GridTiles.IndexOfByPredicate([&](const FHTile &Tile) {return Tile.GridCoordinates == Neigh; });
 }
 //////////////////////////////////////////////////////////////////////////

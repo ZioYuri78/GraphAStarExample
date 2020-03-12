@@ -1,7 +1,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HGTypes.generated.h"
+#include "HGLPTypes.generated.h"
+
+/**
+ * Shape of the Grid.
+ * @see https://www.redblobgames.com/grids/hexagons/implementation.html#map-shapes
+ */
+UENUM(BlueprintType)
+enum class EGridShape : uint8
+{
+	PARALLELOGRAM,
+	TRIANGLE,
+	HEXAGON,
+	RECTANGLE,
+	NONE
+};
+
 
 /**
  * Orientation of the tile
@@ -158,11 +173,8 @@ struct FHFractional
 /**
  * @see  https://www.redblobgames.com/grids/hexagons/#neighbors
  */
-USTRUCT(BlueprintType)
-struct FHDirections
+static struct FHDirections
 {
-	GENERATED_USTRUCT_BODY()
-
 	FHDirections()
 	{
 															//   Flat			| Pointy
@@ -174,18 +186,14 @@ struct FHDirections
 		Directions.Add(FHCubeCoord(FIntVector(-1, 1, 0)));	// 5 Top Left		| Left
 	}
 
-	UPROPERTY(BlueprintReadOnly, Category = "GraphAStarExample|HGTypes|Directions")
 	TArray<FHCubeCoord> Directions;
-};
+}HDirections;
 
 /**
  * @see  https://www.redblobgames.com/grids/hexagons/#neighbors
  */
-USTRUCT(BlueprintType)
-struct FHDiagonals
+static struct FHDiagonals
 {
-	GENERATED_USTRUCT_BODY()
-
 	FHDiagonals()
 	{
 															//   Flat			| Pointy
@@ -197,9 +205,8 @@ struct FHDiagonals
 		Diagonals.Add(FHCubeCoord(FIntVector(-1, 2, -1)));	// 5 Top Left		| Top Left
 	}
 
-	UPROPERTY(BlueprintReadOnly, Category = "GraphAStarExample|HGTypes|Diagonals")
 	TArray<FHCubeCoord> Diagonals;
-};
+}HDiagonals;
 
 /**
  * @see https://www.redblobgames.com/grids/hexagons/implementation.html#layout
@@ -259,6 +266,46 @@ const struct FHPointyOrientation : FHTileOrientation
 
 }HPointyLayout;
 
+
+USTRUCT(BlueprintType)
+struct FHTile
+{
+	GENERATED_USTRUCT_BODY()
+
+	FHTile() {};
+
+	FHTile(FHTileLayout Layout, FHCubeCoord Coord, FVector WCoords, float Cost, bool IsBlock)
+		:TileLayout(Layout), GridCoordinates(Coord), WorldCoordinates(WCoords), TileCost(Cost), bIsBlocking(IsBlock)
+	{
+	}
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hex Grids Plugin|Tile")
+	FHTileLayout TileLayout {};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hex Grids Plugin|Tile")
+	FHCubeCoord GridCoordinates {};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hex Grids Plugin|Tile")
+	FVector WorldCoordinates {
+		FVector::ZeroVector
+	};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grids Plugin|Tile")
+	float TileCost{ 1.f };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grids Plugin|Tile")
+	bool bIsBlocking{ false };
+
+	friend bool operator==(const FHTile &A, const FHTile &B)
+	{
+		return (A.GridCoordinates == B.GridCoordinates) && (A.TileCost == B.TileCost) && (A.bIsBlocking == B.bIsBlocking);
+	}
+
+	friend bool operator!=(const FHTile &A, const FHTile &B)
+	{
+		return !(A == B);
+	}
+};
 
 
 

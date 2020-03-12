@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "NavMesh/RecastNavMesh.h"
+#include "HexGridLibPlugin/Public/HexGridActor.h"
 #include "GraphAStarNavMesh.generated.h"
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogGraphAStarExample_NavMesh, Log, All);
 
@@ -103,7 +105,7 @@ public:
 
 	/* Set a pointer to an hexagonal grid, it can be nullptr */
 	UFUNCTION(BlueprintCallable, Category = "GraphAStarExample|NavMesh")
-	void SetHexGrid(const class AHexGrid *HGrid);
+	void SetHexGrid(const AHexGridActor *HGrid);
 
 	//////////////////////////////////////////////////////////////////////////
 	/**
@@ -127,7 +129,7 @@ public:
 
 	/* Just a pointer to an hexagonal grid actor */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GraphAStarExample|NavMesh")
-	const class AHexGrid *HexGrid;
+	const AHexGridActor *HexGrid;
 
 	UPROPERTY(EditAnywhere, Category = "GraphAStarExample|NavMesh")
 	bool Avoidance{};	
