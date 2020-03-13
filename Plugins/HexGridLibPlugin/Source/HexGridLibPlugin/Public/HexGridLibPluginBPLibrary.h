@@ -12,7 +12,7 @@ DECLARE_STATS_GROUP(TEXT("HEXGRID_STATS"), STATGROUP_HEXGRID, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("CreateGrid(..)"), STAT_CreateGrid, STATGROUP_HEXGRID);
 
 /* Delegate used in the CreateGrid function, executed if bound on each inner loop step. */
-DECLARE_DYNAMIC_DELEGATE_OneParam(FOnAddTileDelegate, const FHTile &, Tile);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnAddTileDelegate, UPARAM(ref) FHTile &, Tile);
 
 UCLASS()
 class HEXGRIDLIBPLUGIN_API UHexGridLibPluginBPLibrary : public UBlueprintFunctionLibrary
@@ -169,17 +169,17 @@ class HEXGRIDLIBPLUGIN_API UHexGridLibPluginBPLibrary : public UBlueprintFunctio
 	static void HexIntersectRanges(const FHCubeCoord &CenterA, const int32 RangeA, const FHCubeCoord &CenterB, const int32 RangeB, TArray<FHCubeCoord> &OutIntersection);
 
 	UFUNCTION(BlueprintCallable, Category = "Hex Grids Plugin", meta = (WorldContext = "WorldContextObject"))
-	static bool HexGetTileAtCoord(const AHexGridActor *Grid, const FHCubeCoord &Coord, FHTile &Tile);
+	static bool HexGetTileAtCoord(const class AHexGridActor *Grid, const FHCubeCoord &Coord, FHTile &Tile);
 
 
 	/**
 	 * Create a new grid Hexagonal shaped grid
-	 * @param Grid					Reference to a HGrid struct.
+	 * @param Grid					AHexGridActor pointer.
 	 * @param OnAddTileDelegate		This parameter is optional, if bound is executed at each step.
 	 * @see https://www.redblobgames.com/grids/hexagons/implementation.html#map-shapes
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Hex Grids Plugin", meta = (AutoCreateRefTerm = "OnAddTile"))
-	static bool HexagonalGrid(AHexGridActor *Grid, const FOnAddTileDelegate &OnAddTile);
+	static bool HexagonalGrid(class AHexGridActor *Grid, const FOnAddTileDelegate &OnAddTile);
 
 	
 };

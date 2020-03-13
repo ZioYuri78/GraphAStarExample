@@ -2,6 +2,7 @@
 
 #include "HexGridLibPluginBPLibrary.h"
 #include "HexGridLibPlugin.h"
+#include "HexGridActor.h"
 
 DEFINE_LOG_CATEGORY(LogHGLP);
 
@@ -260,6 +261,8 @@ bool UHexGridLibPluginBPLibrary::HexagonalGrid(AHexGridActor *Grid, const FOnAdd
 
 	Grid->GridShape = EGridShape::HEXAGON;
 	
+	FHTile TempTile{};
+
 	for (int32 Q{ -Grid->Radius }; Q <= Grid->Radius; ++Q)
 	{
 		// Calculate R1
@@ -271,8 +274,7 @@ bool UHexGridLibPluginBPLibrary::HexagonalGrid(AHexGridActor *Grid, const FOnAdd
 		for (int32 R{ R1 }; R <= R2; ++R)
 		{
 			FHCubeCoord TempCoord{ FIntVector(Q, R, -Q - R) };
-
-			FHTile TempTile{};
+			
 			TempTile.TileLayout = Grid->TileLayout;
 			TempTile.GridCoordinates = TempCoord;
 			TempTile.WorldCoordinates = HexToWorld(Grid->TileLayout, TempCoord);
