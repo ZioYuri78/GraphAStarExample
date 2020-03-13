@@ -58,10 +58,7 @@ void AHexGrid::CreateGrid(const FHTileLayout &TLayout, const int32 GridRadius, c
 
 	TileLayout = TLayout;
 	
-	// We clamp again the radius to [1,25] just to be sure, a grid of 25 is already big 
-	// and go over this limit it start to be memory expensive in editor so if you want
-	// really huge grids in editor you need at least 32GB of ram.
-	Radius = FMath::Clamp(GridRadius, 1, 25);
+	Radius = GridRadius;
 
 	for (int32 Q{ -Radius }; Q <= Radius; ++Q)
 	{

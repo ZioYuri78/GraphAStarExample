@@ -91,7 +91,7 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	FPathFindingResult Result(ENavigationQueryResult::Error);
 
 	FNavigationPath *NavPath = Query.PathInstanceToFill.Get();
-	FNavMeshPath *NavMeshPath = NavPath ? NavPath->CastPath<FNavMeshPath>() : nullptr;
+	FHexNavMeshPath *NavMeshPath = NavPath ? NavPath->CastPath<FHexNavMeshPath>() : nullptr;
 
 	if (NavMeshPath)
 	{
@@ -100,9 +100,9 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 	}
 	else
 	{
-		Result.Path = Self->CreatePathInstance<FNavMeshPath>(Query);
+		Result.Path = Self->CreatePathInstance<FHexNavMeshPath>(Query);
 		NavPath = Result.Path.Get();
-		NavMeshPath = NavPath ? NavPath->CastPath<FNavMeshPath>() : nullptr;
+		NavMeshPath = NavPath ? NavPath->CastPath<FHexNavMeshPath>() : nullptr;
 	}
 
 	const FNavigationQueryFilter *NavFilter = Query.QueryFilter.Get();

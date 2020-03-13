@@ -51,6 +51,25 @@ protected:
 };
 
 
+// We inherit this struct because we need a custom GetCost/GetLength
+struct FHexNavMeshPath : public FNavMeshPath
+{
+	FORCEINLINE
+	virtual float GetCostFromIndex(int32 PathPointIndex) const override
+	{
+		return CurrentPathCost;
+	}
+
+	FORCEINLINE
+	virtual float GetLengthFromPosition(FVector SegmentStart, uint32 NextPathPointIndex) const override
+	{
+		// We exclude the starting point so -1	
+		return PathPoints.Num() - 1;
+	}
+
+	float CurrentPathCost{ 0 };
+};
+
 /**
  * 
  */

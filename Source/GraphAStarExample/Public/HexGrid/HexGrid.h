@@ -131,11 +131,11 @@ public:
 	FHCubeCoord GetNeighbor(const FHCubeCoord &H, const FHCubeCoord &Dir);
 
 	/** Array of HexTiles, in our example we fill it in blueprint with the CreationStepDelegate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
+	UPROPERTY(BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
 	TArray<FHexTile> GridTiles;
 
 	/** Array of Cube coordinates that compose the grid. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
+	UPROPERTY(BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
 	TArray<FHCubeCoord> GridCoordinates{};
 
 	/**
@@ -148,7 +148,7 @@ public:
 	/**
 	 * Radius of the grid in "tiles", clamped [1, 25]
 	 */
-	UPROPERTY(BlueprintReadWrite, Category = "GraphAStarExample|HexGrid", meta = (ClampMin = 1, ClampMax = 25))
+	UPROPERTY(BlueprintReadWrite, Category = "GraphAStarExample|HexGrid")
 	int32 Radius {};
 
 protected:
