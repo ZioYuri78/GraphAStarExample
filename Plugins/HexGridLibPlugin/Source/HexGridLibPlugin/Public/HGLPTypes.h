@@ -173,7 +173,7 @@ struct FHFractional
 /**
  * @see  https://www.redblobgames.com/grids/hexagons/#neighbors
  */
-static struct FHDirections
+static const struct FHDirections
 {
 	FHDirections()
 	{
@@ -192,7 +192,7 @@ static struct FHDirections
 /**
  * @see  https://www.redblobgames.com/grids/hexagons/#neighbors
  */
-static struct FHDiagonals
+static const struct FHDiagonals
 {
 	FHDiagonals()
 	{
