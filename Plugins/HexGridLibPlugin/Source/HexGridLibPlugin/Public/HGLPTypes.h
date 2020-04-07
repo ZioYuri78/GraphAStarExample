@@ -229,6 +229,7 @@ struct FHTileOrientation
 	double b0, b1, b2, b3;	// Inverse.	Q b0*x, b1*y - R b2*x, b3*y		- used in WorldToHex
 };
 
+// I mean, you can use the calculator and write the results here instead of calculate them.
 const struct FHFlatTopOrientation : FHTileOrientation
 {
 	// Flat top hexagon layout (X = y, Y = -x where uppercase is the original coordinates from Red Blob Games article, lowercase is UE4 coordinates)
@@ -248,6 +249,7 @@ const struct FHFlatTopOrientation : FHTileOrientation
 
 }HFlatTopLayout;
 
+// I mean, you can use the calculator and write the results here instead of calculate them.
 const struct FHPointyOrientation : FHTileOrientation
 {
 	FHPointyOrientation()
