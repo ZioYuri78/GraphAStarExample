@@ -7,9 +7,9 @@
   * [Hexagonal grid implementation guide.](https://www.redblobgames.com/grids/hexagons/implementation.html)
   
 ## Readings will let you better understand my example project
-* [Epic wiki article about replacing the pathfinder.](https://wiki.unrealengine.com/Replacing_The_Pathfinder)
+* [Epic wiki article about replacing the pathfinder.](https://www.ue4community.wiki/Legacy/Replacing_The_Pathfinder)
 * [Neatly replacing NavMesh with A* in UE4 by Chris Russel.](https://crussel.net/2016/06/05/neatly-replacing-navmesh-with-a-in-ue4/)
-* [Epic wiki article about custom Path Following Component.](https://wiki.unrealengine.com/AI_Navigation_in_C%2B%2B,_Customize_Path_Following_Every_Tick)
+* [Epic wiki article about custom Path Following Component.](https://www.ue4community.wiki/Legacy/AI_Navigation_in_C%2B%2B,_Customize_Path_Following_Every_Tick)
 
 ## The GraphAStarExample project
 
