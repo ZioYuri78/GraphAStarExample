@@ -1,3 +1,11 @@
+## This is the "stable" release branch, look at the [master branch](https://github.com/ZioYuri78/GraphAStarExample/tree/Master) for advanced features like:
+* Hex Grid Plugin (basic version)
+* Simple jump implementation
+* EQS support
+* Simple A* debug draws
+* Simple avoidance
+
+
 # Hexagonal grid pathfinding in Unreal Engine 4
 
 ## Prerequisites
