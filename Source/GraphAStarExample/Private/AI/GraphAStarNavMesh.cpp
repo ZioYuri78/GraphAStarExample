@@ -250,7 +250,11 @@ FPathFindingResult AGraphAStarNavMesh::FindPath(const FNavAgentProperties &Agent
 					
 					// PathIndices array computed by FGraphAStar will not contain the starting point, so
 					// we need to add it manually the the Path::PathPoints array
-					Result.Path->GetPathPoints().Add(FNavPathPoint(Query.StartLocation));										
+					// UPDATE: this is a very lazy workaround to avoid the duplicated first node bug that
+					// happen when we have a path longer than 7 tiles and also it let us move of only one tile.					
+					if(PathIndices.Num() == 1) {
+						Result.Path->GetPathPoints().Add(FNavPathPoint(Query.StartLocation));
+					}
 
 					// Let's traverse the PathIndices array and build the FNavPathPoints we 
 					// need to add to the Path.
